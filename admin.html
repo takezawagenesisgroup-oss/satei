@@ -161,6 +161,7 @@
   .rp-head h3{margin:0;font-size:15px}
   .rp-head .small{margin-left:auto}
   #poster{display:none}
+  .chk div{margin:4px 0;line-height:1.5}
   .hidden{display:none!important}
   /* 印刷（面談で紙・PDFにして使う） */
   @page land{size:A4 landscape;margin:9mm}
@@ -384,7 +385,7 @@ function renderOverview(){
   const sub=r.people.filter(p=>p.status==="提出済").length, wip=r.people.filter(p=>p.status==="入力中").length;
   const stBadge=p=>`<span class="st ${p.status==="提出済"?"done":p.status==="入力中"?"wip":"none"}">${esc(p.status)}</span>`;
   let h=isGAS?"":`<div class="demo">試作版（デモデータ）です。人をタップすると個人カルテが開きます。AI分析・面談要約は試作用の簡易版で動きます。</div>`;
-  if(r.trial) h+=`<div class="demo"><b>試験運転中</b>です。表示されているのはテスト用のデータです。本番の前に、スプレッドシートのメニュー「賞与査定 → 試験運転を終える」を実行してください。</div>`;
+  if(r.trial) h+=`<div class="demo"><b>試験運転中</b>です。表示されているのはテスト用のデータです。本番の前に、この画面の下の「試験運転を終える」（またはスプレッドシートのメニュー「賞与査定 → 試験運転を終える」）を実行してください。</div>`;
   h+=`<div class="rp-bar"><button class="btn sub" id="rpOpen" type="button">📋 店舗別レポート（会議用）</button></div>`;
   h+=`<div class="tabs">${STORES.map(s=>`<button type="button" class="tab ${s===S.store?"active":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>`;
   h+=`<div class="sec"><h3>${esc(S.store)}<span class="sub">${esc(r.period)}｜全体の提出 ${sub}/${r.people.length}人${wip?`（入力中 ${wip}人）`:""}</span></h3>
@@ -405,7 +406,13 @@ function renderOverview(){
     <button class="btn" id="ppBtn" type="button" style="margin-top:10px">保存する</button>
     <div class="small" id="ppMsg" style="margin-top:6px">期間外は合言葉が合っていても入れません（入力途中の人の一時保存・送信も止まります）。日付を空欄にすると制限なし。合言葉は査定のたびに変えるのがおすすめです。</div></div>`;
   h+=`<div class="sec" id="qrSec"><h3>配布用QRコード<span class="sub">従業員用の入力フォーム</span></h3>${qrHtml(r)}</div>`;
+  const owner=ME&&ME.role==="オーナー";
+  if(owner) h+=`<div class="sec"><h3>試験運転・動作チェック<span class="sub">オーナーのみ</span></h3>
+    <div class="cfg">${r.trial?`<button class="btn" id="trEnd" type="button">試験運転を終える（テストのデータを消す）</button>`
+      :`<button class="btn sub" id="trStart" type="button">試験運転を始める</button>`}<button class="btn sub" id="chkBtn" type="button">動作チェック</button></div>
+    <div class="small" id="trMsg" style="margin-top:6px">スプレッドシートのメニュー「賞与査定」と同じ操作です。スマホからもできます。</div></div>`;
   $("app").innerHTML=h;
+  if(owner) bindTrial();
   bindQR(r);
   $("ppBtn").onclick=()=>{const b=$("ppBtn");b.disabled=true;
     api("adminSetConfig",{passphrase:$("ppIn").value,from:$("opFrom").value,to:$("opTo").value}).then(x=>{b.disabled=false;
@@ -416,6 +423,28 @@ function renderOverview(){
   document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{S.store=b.dataset.s;renderOverview();});
   document.querySelectorAll(".prow").forEach(el=>el.onclick=()=>openPerson(el.dataset.n));
   $("rpOpen").onclick=openReport;
+}
+
+/* 試験運転・動作チェック（オーナー） */
+function bindTrial(){
+  const msg=$("trMsg"), MARK={ok:"✅",warn:"⚠️",ng:"❌"};
+  const after=x=>{S.period=x.period;S.periods=x.periods;fillPeriods();};
+  if($("trStart")) $("trStart").onclick=()=>{
+    if(!confirm("試験運転を始めます。\n\n・査定期を「試験運転」に切り替えます（終えると元に戻ります）\n・受付期間を制限なしにします\n・テスト用の評価データを入れます\n\n本番の回答には触りません。始めますか？")) return;
+    $("trStart").disabled=true; msg.textContent="準備しています…（30秒ほどかかることがあります）";
+    api("adminTrial","start").then(x=>{after(x);const t=x.result;
+      alert("試験運転を始めました。\n\n合言葉："+t.passphrase+"\nテスト用の評価 "+t.rows+"件（提出済 "+t.submitted+"人・入力中 "+t.wip+"人）を入れました。");
+      loadOverview();}).catch(e=>{$("trStart").disabled=false;msg.textContent=e.message||e;});};
+  if($("trEnd")) $("trEnd").onclick=()=>{
+    if(!confirm("試験運転のデータ（評価・入力状況・AI分析・面談記録、テスト用の従業員）を消して、設定を元に戻します。よろしいですか？")) return;
+    $("trEnd").disabled=true; msg.textContent="片付けています…";
+    api("adminTrial","end").then(x=>{after(x);
+      alert("試験運転を終えました。"+x.result.removed+"行を消し、査定期を「"+x.result.period+"」に戻しました。");
+      loadOverview();}).catch(e=>{$("trEnd").disabled=false;msg.textContent=e.message||e;});};
+  $("chkBtn").onclick=()=>{$("chkBtn").disabled=true; msg.textContent="確認しています…";
+    api("adminTrial","check").then(x=>{$("chkBtn").disabled=false;
+      msg.innerHTML=`<div class="chk">${x.result.map(c=>`<div>${MARK[c.level]||""} <b>${esc(c.label)}</b>：${esc(c.msg)}</div>`).join("")}</div>`;})
+      .catch(e=>{$("chkBtn").disabled=false;msg.textContent=e.message||e;});};
 }
 
 /* ============================================================
@@ -1023,6 +1052,11 @@ const DEMO=(()=>{
       users.push({email,name:String(c.name||"").trim(),role:c.role==="オーナー"?"オーナー":"閲覧者",at:"たった今",last:""});return{email,password:"demo2345pw"}},
     adminRemoveUser:(email)=>{users=users.filter(u=>u.email!==email);return{ok:true}},
     adminResetUserPassword:(email)=>({email,password:"demo6789pw"}),
+    adminTrial:(action)=>{
+      if(action==="check") return {result:[{level:"ok",label:"名簿",msg:"52人（デモ）"},{level:"warn",label:"合言葉",msg:"短すぎます（デモ）"}],trial:false,period:periods[2],periods};
+      if(action==="start") return {result:{passphrase:pass,rows:120,submitted:30,wip:8},trial:true,period:periods[2],periods};
+      return {result:{removed:128,period:periods[2]},trial:false,period:periods[2],periods};
+    },
     adminOverview:(period)=>{
       const rows=resp.filter(r=>r.period===period), people=[];
       STORES.forEach(s=>members[s].forEach(m=>{const sc=score(rows.filter(r=>r.name===m.name),m.name);
