@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>賞与査定 入力フォーム</title>
+<style>
+  :root{
+    --navy:#1d2a44; --navy2:#2c3d60; --bg:#f3f4f7; --card:#fff; --line:#e3e6ec;
+    --text:#1f2430; --sub:#6b7385; --good:#c99a06; --goodbg:#fff7d6; --bad:#2b2b2b; --badbg:#e9e9ec;
+    --ok:#1f8a5b; --warn:#c2410c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:15px}
+  button{font-family:inherit}
+  header{background:var(--navy);color:#fff;padding:14px 16px 0;position:sticky;top:0;z-index:20}
+  .title{font-size:17px;font-weight:700;letter-spacing:.02em}
+  .who{font-size:12px;opacity:.85;margin-top:3px;display:flex;justify-content:space-between;align-items:center}
+  .who button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:12px;font-size:11px;padding:2px 8px}
+  .tabs{display:flex;gap:2px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:1 0 auto;min-width:74px;background:var(--navy2);color:#cfd6e6;border:0;border-radius:8px 8px 0 0;
+    padding:9px 8px 8px;font-size:13px;font-weight:600;line-height:1.2}
+  .tab small{display:block;font-size:10px;font-weight:500;opacity:.85;margin-top:2px}
+  .tab.active{background:var(--bg);color:var(--navy)}
+  .tab .own{display:inline-block;font-size:9px;background:#f0b400;color:#1d2a44;border-radius:6px;padding:0 4px;margin-left:3px;vertical-align:1px}
+  main{padding:12px 12px 110px}
+  .demo{background:#fff4e5;border:1px solid #f5c98a;color:#8a4b00;font-size:12px;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+  .legend{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin:2px 2px 10px}
+  .note{font-size:12px;color:var(--sub);margin:0 2px 10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .card.done{border-color:#bfe3d0}
+  .card.partial{border-color:#f3c9a8}
+  .chead{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;user-select:none}
+  .chead .name{font-weight:700;font-size:16px}
+  .chead .role{font-size:11px;color:var(--sub);margin-left:6px;font-weight:500}
+  .chead .me{font-size:10px;background:#e6ecfa;color:var(--navy2);border-radius:6px;padding:1px 5px;margin-left:6px}
+  .chead .grow{flex:1;min-width:0}
+  .mini{font-size:11px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip{font-size:11px;border-radius:10px;padding:3px 8px;white-space:nowrap;font-weight:600}
+  .chip.none{background:#eef0f4;color:var(--sub)}
+  .chip.part{background:#fdeee3;color:var(--warn)}
+  .chip.ok{background:#e1f4ea;color:var(--ok)}
+  .chev{color:#a3a9b6;font-size:13px;transition:transform .2s}
+  .card.open .chev{transform:rotate(90deg)}
+  .cbody{display:none;padding:0 14px 14px;border-top:1px solid var(--line)}
+  .card.open .cbody{display:block}
+  .item{padding-top:14px}
+  .ilabel{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .ilabel .n{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;align-items:center;justify-content:center}
+  .rate{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .rate button{border:1px solid var(--line);background:#fafbfc;border-radius:8px;height:44px;padding:0;
+    font-size:12px;line-height:1;letter-spacing:-1px;color:#9aa1ad}
+  .rate button.b{color:#555}
+  .rate button.w{color:var(--good)}
+  .rate button.z{color:#9aa1ad;font-size:14px}
+  .rate button.sel.b{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .rate button.sel.w{background:var(--good);color:#fff;border-color:var(--good)}
+  .rate button.sel.z{background:#8a92a3;color:#fff;border-color:#8a92a3}
+  .scale{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-top:4px;padding:0 2px}
+  textarea{width:100%;margin-top:8px;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px;
+    font-family:inherit;resize:vertical;min-height:44px;background:#fff;color:var(--text)}
+  textarea::placeholder{color:#b0b6c2}
+  .close{display:block;width:100%;margin-top:14px;background:#eef0f4;border:0;border-radius:8px;padding:10px;font-size:13px;color:var(--navy2);font-weight:600}
+  footer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));z-index:20;display:flex;gap:10px;align-items:center}
+  .prog{flex:1;font-size:12px;color:var(--sub)}
+  .prog b{color:var(--text);font-size:14px}
+  .bar{height:5px;background:#eef0f4;border-radius:3px;margin-top:5px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+  .send{background:var(--navy);color:#fff;border:0;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:700}
+  .send:disabled{background:#b8bfcc}
+  /* overlay */
+  .ov{position:fixed;inset:0;background:rgba(20,26,40,.55);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .ov.show{display:flex}
+  .sheet{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));max-height:85vh;overflow:auto}
+  .sheet h2{font-size:17px;margin:0 0 10px}
+  .sheet p{font-size:13px;color:var(--sub);margin:6px 0;line-height:1.6}
+  .sheet ul{font-size:13px;padding-left:18px;margin:8px 0;line-height:1.7}
+  .row{display:flex;gap:8px;margin-top:16px}
+  .row button{flex:1;border-radius:10px;padding:12px;font-size:15px;font-weight:700;border:0}
+  .btn1{background:var(--navy);color:#fff}
+  .btn2{background:#eef0f4;color:var(--text)}
+  select{width:100%;font-size:16px;padding:12px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-top:6px;font-family:inherit;color:var(--text)}
+  .center{text-align:center;padding:60px 20px}
+  .center .big{font-size:44px}
+  .center h2{font-size:19px;margin:10px 0 6px}
+  .center p{color:var(--sub);font-size:13px;line-height:1.7}
+  .hidden{display:none!important}
+  .spin{width:28px;height:28px;border:3px solid #dfe3ea;border-top-color:var(--navy);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#1d2a44,#2c3d60)}
+  .gcard{background:#fff;border-radius:16px;padding:24px 20px;width:100%;max-width:380px}
+  .glogo{font-size:12px;font-weight:700;color:var(--navy2);letter-spacing:.08em;margin-bottom:6px}
+  .gcard h2{font-size:18px;margin:0 0 6px}
+  .gcard p{font-size:13px;color:var(--sub);line-height:1.6;margin:6px 0}
+  .gin{width:100%;font-size:17px;padding:13px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-top:10px;font-family:inherit;color:var(--text)}
+  .gbtn{width:100%;margin-top:14px;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;font-weight:700}
+  .gbtn:disabled{background:#b8bfcc}
+  .glink{display:block;margin:12px auto 0;background:none;border:0;color:var(--sub);font-size:13px}
+  .gerr{color:var(--warn);font-size:13px;margin-top:8px;min-height:1em}
+  .gnote{background:#f3f6fc;border-radius:8px;padding:10px;margin-top:12px!important}
+  .gnote.locked{background:#f4f4f6;color:var(--text)!important}
+  .demo-hint{font-size:12px!important;color:#8a4b00!important;margin-top:14px!important}
+  .save{background:#eef0f4;color:var(--navy);border:0;border-radius:10px;padding:13px 14px;font-size:14px;font-weight:700}
+  .save:disabled{opacity:.5}
+  .code{font-size:44px;font-weight:800;letter-spacing:.25em;text-align:center;background:#f3f6fc;border-radius:12px;padding:14px 0;margin:12px 0;color:var(--navy);font-variant-numeric:tabular-nums}
+  .small{font-size:12px!important}
+  .warnp{background:#fff4e5;color:#8a4b00!important;border-radius:8px;padding:10px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2b2f3a;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:99;max-width:90%}
+</style>
+</head>
+<body>
+
+<!-- ① 合言葉 -->
+<div class="gate" id="scrPass">
+  <div class="gcard">
+    <div class="glogo">賞与査定</div>
+    <h2>合言葉を入力してください</h2>
+    <p>会社から案内された合言葉を入力します。</p>
+    <input class="gin" id="passIn" type="text" autocomplete="off" autocapitalize="off" placeholder="合言葉">
+    <div class="gerr" id="passErr"></div>
+    <button class="gbtn" id="passBtn" type="button">次へ</button>
+    <p class="demo-hint" id="demoHint"></p>
+  </div>
+</div>
+
+<!-- ② 名前 -->
+<div class="gate hidden" id="scrName">
+  <div class="gcard">
+    <div class="glogo" id="periodLbl">賞与査定</div>
+    <h2>あなたの名前を選んでください</h2>
+    <p>この査定は記名式です。送信した内容は会社（管理者）だけが確認でき、他の従業員には見えません。</p>
+    <select class="gin" id="nameSel"></select>
+    <div id="resumeBox" class="hidden">
+      <p class="gnote">この名前は<b>入力途中</b>で保存されています。一時保存のときに表示された<b>再開パスワード（4桁）</b>を入力してください。</p>
+      <input class="gin" id="codeIn" type="tel" inputmode="numeric" maxlength="4" placeholder="再開パスワード（4桁）">
+    </div>
+    <div id="lockedBox" class="hidden">
+      <p class="gnote locked">🔒 この名前は<b>提出済み</b>のため、入力できません。<br>修正が必要な場合は管理者に連絡してください。</p>
+    </div>
+    <div class="gerr" id="nameErr"></div>
+    <button class="gbtn" id="nameBtn" type="button">はじめる</button>
+    <button class="glink" id="nameBack" type="button">‹ 合言葉の入力に戻る</button>
+  </div>
+</div>
+
+<!-- ③ 評価 -->
+<header id="hdr" class="hidden">
+  <div class="title">賞与査定 入力フォーム</div>
+  <div class="who"><span id="whoLabel"></span><button id="quitBtn" type="button">保存して終了</button></div>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main id="main"></main>
+<footer id="ftr" class="hidden">
+  <div class="prog">
+    <div id="progTxt"></div>
+    <div class="bar"><i id="progBar"></i></div>
+  </div>
+  <button class="save" id="saveBtn" type="button">一時保存</button>
+  <button class="send" id="sendBtn" type="button">送信</button>
+</footer>
+
+<!-- 送信確認 -->
+<div class="ov" id="ovConfirm">
+  <div class="sheet">
+    <h2 id="cfTitle">この内容で送信しますか？</h2>
+    <div id="cfBody"></div>
+    <div class="row">
+      <button class="btn2" id="cfNo" type="button">戻る</button>
+      <button class="btn1" id="cfYes" type="button">送信する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 一時保存 -->
+<div class="ov" id="ovSaved">
+  <div class="sheet">
+    <h2>一時保存しました</h2>
+    <p>続きを入力するときは、名前を選んだあとにこの<b>再開パスワード</b>を入力します。<b>スクリーンショットかメモ</b>で控えてください。</p>
+    <div class="code" id="codeShow">----</div>
+    <p class="small">このパスワードを知らない人は、あなたの入力内容を見ることも続きを入力することもできません。</p>
+    <div class="row">
+      <button class="btn2" id="svQuit" type="button">ここで終了</button>
+      <button class="btn1" id="svCont" type="button">入力を続ける</button>
+    </div>
+  </div>
+</div>
+
+<script>window.GENESIS_API="https:\/\/script.google.com\/macros\/s\/AKfycbxV6Nvcrja7Mhj346IcAL9Vn2h31YU-nJ251_CYQq94xbHcKQWcTOgQWPBp6l73ctQXAg\/exec";</script>
+<script>
+/* ==================== 設定 ==================== */
+const ITEMS = ["お客様を楽しませる行動","会社の利益となる行動","働く仲間のための行動"];
+const LEVELS = [
+  {v:-3,t:"★★★",c:"b"},{v:-2,t:"★★",c:"b"},{v:-1,t:"★",c:"b"},
+  {v:0,t:"－",c:"z"},
+  {v:1,t:"☆",c:"w"},{v:2,t:"☆☆",c:"w"},{v:3,t:"☆☆☆",c:"w"}
+];
+const isGAS = typeof google!=="undefined" && google.script && google.script.run;
+
+/* ==================== API ==================== */
+/* 画面をGoogle以外の場所（GitHub Pagesなど）に置いたときは、ここに本番のURLが入る（tools/build-static.js）。
+   複数のGoogleアカウントにログインした端末でも開けるように、ログイン情報なしでサーバーを呼ぶ */
+const API_URL=(typeof window!=="undefined"&&window.GENESIS_API)||"";
+function callApi(fn,args){
+  return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:args})})
+    .then(r=>r.json()).catch(()=>{throw new Error("サーバーと通信できませんでした。電波の良いところで、もう一度お試しください")})
+    .then(d=>{ if(!d||!d.ok) throw new Error(d&&d.error||"エラーが起きました"); return d.result; });
+}
+function api(fn,...args){
+  if(API_URL) return callApi(fn,args);
+  if(isGAS) return new Promise((ok,ng)=>google.script.run.withSuccessHandler(ok).withFailureHandler(ng)[fn](...args));
+  return new Promise((ok,ng)=>setTimeout(()=>{try{ok(DEMO[fn](...args))}catch(e){ng(e)}},250));
+}
+
+/* ==================== 状態 ==================== */
+let PASS="", roster=null, me=null, myStore=null, CODE=null, curTab=null, data={}, openKey=null, dirty=false;
+const key=(s,n)=>s+"｜"+n;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const show=(id,on)=>$(id).classList.toggle("hidden",!on);
+function busy(btn,on,label){btn.disabled=on; if(label) btn.textContent=label;}
+
+/* ==================== ① 合言葉 ==================== */
+$("passBtn").onclick=doPass;
+$("passIn").onkeydown=e=>{if(e.key==="Enter")doPass()};
+function doPass(){
+  const b=$("passBtn"); $("passErr").textContent="";
+  busy(b,true,"確認中…");
+  api("enter",$("passIn").value).then(r=>{
+    PASS=$("passIn").value; roster=r;
+    busy(b,false,"次へ"); goName();
+  }).catch(e=>{busy(b,false,"次へ"); $("passErr").textContent=e.message||e;});
+}
+
+/* ==================== ② 名前 ==================== */
+let nameState=null;
+function goName(){
+  show("scrPass",false); show("scrName",true);
+  $("periodLbl").textContent=roster.period?`賞与査定｜${roster.period}`:"賞与査定";
+  $("nameSel").innerHTML='<option value="">— 選択してください —</option>'+roster.stores.map(s=>
+    `<optgroup label="${esc(s)}">`+(roster.members[s]||[]).map(m=>`<option value="${esc(m.name)}">${esc(m.name)}（${esc(m.role)}）</option>`).join("")+"</optgroup>").join("");
+  resetName();
+}
+function resetName(){ nameState=null; show("resumeBox",false); show("lockedBox",false); $("codeIn").value=""; $("nameErr").textContent=""; $("nameBtn").textContent="はじめる"; $("nameBtn").disabled=false; }
+$("nameSel").onchange=resetName;
+$("nameBack").onclick=()=>{show("scrName",false); show("scrPass",true); $("passIn").value=""; PASS="";};
+$("nameBtn").onclick=()=>{
+  const name=$("nameSel").value, b=$("nameBtn"); $("nameErr").textContent="";
+  if(!name){$("nameErr").textContent="名前を選んでください";return;}
+  if(nameState==="paused"){
+    busy(b,true,"確認中…");
+    api("resumeSession",PASS,name,$("codeIn").value).then(r=>{busy(b,false,"再開する"); startEval(name,r.draft,r.code);})
+      .catch(e=>{busy(b,false,"再開する"); $("nameErr").textContent=e.message||e;});
+    return;
+  }
+  busy(b,true,"確認中…");
+  api("startSession",PASS,name).then(r=>{
+    nameState=r.state;
+    if(r.state==="new"){ busy(b,false,"はじめる"); startEval(name,{},null); }
+    else if(r.state==="paused"){ show("resumeBox",true); busy(b,false,"再開する"); $("codeIn").focus(); }
+    else { show("lockedBox",true); b.disabled=true; b.textContent="入力できません"; }
+  }).catch(e=>{busy(b,false,"はじめる"); $("nameErr").textContent=e.message||e;});
+};
+
+/* ==================== ③ 評価 ==================== */
+function findStore(name){ for(const s of roster.stores) if((roster.members[s]||[]).some(m=>m.name===name)) return s; return null; }
+function startEval(name,draft,code){
+  me=name; myStore=findStore(name); CODE=code; data=draft||{}; curTab=myStore; openKey=null; dirty=false;
+  show("scrName",false); show("hdr",true); show("ftr",true);
+  $("whoLabel").textContent=`${roster.period?roster.period+"｜":""}${me}（${myStore}）`;
+  render(); window.scrollTo(0,0);
+}
+function entry(s,n){return data[key(s,n)]||{r:[null,null,null],c:["","",""]}}
+function status(s,n){
+  const e=data[key(s,n)]; if(!e) return "none";
+  const k=e.r.filter(v=>v!==null).length;
+  if(k===3) return "ok";
+  if(k>0||e.c.some(x=>x.trim())) return "part";
+  return "none";
+}
+function tabCount(s){const ms=roster.members[s]||[];return {done:ms.filter(m=>status(s,m.name)==="ok").length,total:ms.length}}
+function lvl(v){return LEVELS.find(l=>l.v===v)}
+function miniTxt(e){return e.r.map((v,i)=>v===null?"":`${["お客様","利益","仲間"][i]} ${lvl(v).t}`).filter(Boolean).join("　")}
+
+function render(){
+  $("tabs").innerHTML=roster.stores.map(s=>{
+    const c=tabCount(s);
+    return `<button type="button" class="tab ${s===curTab?"active":""}" data-s="${esc(s)}">${esc(s)}${s===myStore?'<span class="own">自店</span>':""}<small>${c.done}/${c.total}人</small></button>`;
+  }).join("");
+  $("tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{curTab=b.dataset.s;openKey=null;render();window.scrollTo(0,0)});
+  const ms=roster.members[curTab]||[];
+  let h="";
+  if(!isGAS) h+=`<div class="demo">試作版です。動きを試せますが、実際にはどこにも送られません。</div>`;
+  h+= curTab===myStore
+    ? `<div class="note">自分の店舗の人（自分自身を含む）を評価してください。<b>よく分からない人は飛ばしても送信できます。</b>評価する人は3項目すべて選んでください。コメントは任意です。</div>`
+    : `<div class="note">他部署の評価は<b>任意</b>です。評価する人だけ入力してください（3項目すべて）。</div>`;
+  h+=`<div class="legend"><span>★ 黒星＝悪い</span><span>－ どちらでもない</span><span style="color:var(--good)">☆ 白星＝良い</span></div>`;
+  for(const m of ms){
+    const k=key(curTab,m.name), e=entry(curTab,m.name), st=status(curTab,m.name), mini=miniTxt(e);
+    const chip=st==="ok"?'<span class="chip ok">完了</span>':st==="part"?'<span class="chip part">途中</span>':'<span class="chip none">未入力</span>';
+    h+=`<div class="card ${st==="ok"?"done":st==="part"?"partial":""} ${openKey===k?"open":""}" data-k="${esc(k)}">
+      <div class="chead"><div class="grow">
+        <div><span class="name">${esc(m.name)}</span><span class="role">${esc(m.role)}</span>${m.name===me?'<span class="me">本人</span>':""}</div>
+        ${mini?`<div class="mini">${esc(mini)}</div>`:""}
+      </div>${chip}<span class="chev">▶</span></div>
+      <div class="cbody">${openKey===k?body(e):""}</div>
+    </div>`;
+  }
+  $("main").innerHTML=h;
+  $("main").querySelectorAll(".chead").forEach(el=>el.onclick=()=>{
+    const k=el.parentElement.dataset.k; openKey=openKey===k?null:k; render();
+    if(openKey){const c=document.querySelector(".card.open"); if(c) c.scrollIntoView({block:"start",behavior:"smooth"});}
+  });
+  bindBody(); progress();
+}
+function body(e){
+  return ITEMS.map((it,i)=>`<div class="item">
+    <div class="ilabel"><span class="n">${i+1}</span>${it}</div>
+    <div class="rate" data-i="${i}">${LEVELS.map(l=>`<button type="button" class="${l.c} ${e.r[i]===l.v?"sel":""}" data-v="${l.v}">${l.t}</button>`).join("")}</div>
+    <div class="scale"><span>悪い</span><span>良い</span></div>
+    <textarea data-i="${i}" rows="2" maxlength="500" placeholder="コメント（任意）">${esc(e.c[i])}</textarea>
+  </div>`).join("")+`<button type="button" class="close">閉じる</button>`;
+}
+function bindBody(){
+  const card=document.querySelector(".card.open"); if(!card) return;
+  const k=card.dataset.k;
+  const get=()=>data[k]||(data[k]={r:[null,null,null],c:["","",""]});
+  card.querySelectorAll(".rate").forEach(row=>{
+    const i=+row.dataset.i;
+    row.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      const e=get(), v=+b.dataset.v;
+      e.r[i]=e.r[i]===v?null:v; dirty=true;
+      row.querySelectorAll("button").forEach(x=>x.classList.toggle("sel",+x.dataset.v===e.r[i]));
+      refreshHead(card,k);
+    });
+  });
+  card.querySelectorAll("textarea").forEach(t=>t.oninput=()=>{get().c[+t.dataset.i]=t.value; dirty=true; refreshHead(card,k,true);});
+  card.querySelector(".close").onclick=()=>{openKey=null;render();};
+}
+function refreshHead(card,k,quiet){
+  const [s,n]=k.split("｜"), st=status(s,n), e=entry(s,n);
+  card.classList.toggle("done",st==="ok"); card.classList.toggle("partial",st==="part");
+  const chip=card.querySelector(".chip");
+  chip.className="chip "+(st==="ok"?"ok":st==="part"?"part":"none");
+  chip.textContent=st==="ok"?"完了":st==="part"?"途中":"未入力";
+  const mini=miniTxt(e); let mEl=card.querySelector(".mini");
+  if(mini){ if(!mEl){mEl=document.createElement("div");mEl.className="mini";card.querySelector(".grow").appendChild(mEl);} mEl.textContent=mini; }
+  else if(mEl) mEl.remove();
+  if(!quiet){
+    const c=tabCount(s); const tb=[...document.querySelectorAll(".tab")].find(t=>t.dataset.s===s);
+    if(tb) tb.querySelector("small").textContent=`${c.done}/${c.total}人`;
+  }
+  progress();
+}
+function progress(){
+  const c=tabCount(myStore);
+  let other=0; roster.stores.filter(s=>s!==myStore).forEach(s=>other+=tabCount(s).done);
+  $("progTxt").innerHTML=`自店舗 <b>${c.done}/${c.total}人</b>${other?`　他部署 ${other}人`:""}`;
+  $("progBar").style.width=(c.total?c.done/c.total*100:0)+"%";
+}
+
+/* ==================== 一時保存 ==================== */
+function doSave(after){
+  const b=$("saveBtn"); busy(b,true,"保存中…");
+  api("saveDraft",PASS,me,data,CODE).then(r=>{
+    CODE=r.code; dirty=false; busy(b,false,"一時保存");
+    $("codeShow").textContent=CODE; $("ovSaved").classList.add("show");
+  }).catch(e=>{busy(b,false,"一時保存"); toast(e.message||e);});
+}
+$("saveBtn").onclick=()=>doSave();
+$("quitBtn").onclick=()=>doSave();
+$("svCont").onclick=()=>$("ovSaved").classList.remove("show");
+$("svQuit").onclick=()=>{$("ovSaved").classList.remove("show"); quit("一時保存しました","続きは、名前を選んだあとに再開パスワード <b>"+esc(CODE)+"</b> を入力すると入力できます。");};
+function quit(title,msg){
+  show("hdr",false); show("ftr",false);
+  $("main").innerHTML=`<div class="center"><div class="big">💾</div><h2>${title}</h2><p>${msg}</p></div>`;
+  me=null; data={}; PASS=""; roster=null;
+}
+window.addEventListener("beforeunload",e=>{if(me&&dirty){e.preventDefault();e.returnValue="";}});
+
+/* ==================== 送信 ==================== */
+function collect(){
+  const entries=[], missing=[], partial=[];
+  for(const s of roster.stores) for(const m of roster.members[s]||[]){
+    const st=status(s,m.name), e=entry(s,m.name);
+    if(st==="ok") entries.push({store:s,name:m.name,role:m.role,ratings:e.r.slice(),comments:e.c.map(x=>x.trim())});
+    else if(st==="part") partial.push(`${m.name}（${s}）`);
+    else if(s===myStore) missing.push(m.name);
+  }
+  return {entries,missing,partial};
+}
+$("sendBtn").onclick=()=>{
+  const {entries,missing,partial}=collect(), yes=$("cfYes");
+  if(!entries.length){
+    $("cfTitle").textContent="まだ送信できません";
+    $("cfBody").innerHTML=`<p>まだ1人も評価していません。評価する人の3項目を選んでから送信してください。</p>${partial.length?`<p>途中の人（3項目そろっていない）：${partial.map(esc).join("、")}</p>`:""}<p>今日はここまでにする場合は「一時保存」を押してください。</p>`;
+    yes.classList.add("hidden"); $("cfNo").textContent="入力に戻る";
+  }else{
+    $("cfTitle").textContent="この内容で送信しますか？";
+    const by={}; entries.forEach(e=>by[e.store]=(by[e.store]||0)+1);
+    let b=`<p>評価者：<b>${esc(me)}</b></p><ul>${Object.entries(by).map(([s,n])=>`<li>${esc(s)}：${n}人</li>`).join("")}</ul>`;
+    if(missing.length) b+=`<p class="small">自店舗で評価していない人：${missing.length}人（${missing.map(esc).join("、")}）。この人たちは評価なしで送信されます。</p>`;
+    if(partial.length) b+=`<p class="small" style="color:var(--warn)">途中の人（3項目そろっていない）は<b>送信されません</b>：${partial.map(esc).join("、")}。送るなら「戻る」で3項目すべて選んでください。</p>`;
+    b+=`<p class="warnp">🔒 送信すると<b>ロックされ、あとから見ることも直すこともできなくなります。</b>修正が必要な場合は管理者に連絡してください。</p>`;
+    $("cfBody").innerHTML=b; yes.classList.remove("hidden"); $("cfNo").textContent="戻る";
+  }
+  $("ovConfirm").classList.add("show");
+};
+$("cfNo").onclick=()=>$("ovConfirm").classList.remove("show");
+$("cfYes").onclick=()=>{
+  const {entries}=collect(), yes=$("cfYes");
+  busy(yes,true,"送信中…");
+  api("submitEvaluation",PASS,{evaluator:me,evaluatorStore:myStore,entries},CODE).then(()=>{
+    $("ovConfirm").classList.remove("show"); busy(yes,false,"送信する");
+    const n=entries.length, who=me; dirty=false;
+    quit("送信しました",`${esc(who)} さん、ご協力ありがとうございました。<br>${n}人分の評価を受け付けました。<br><br>🔒 入力内容はロックされました。${isGAS?"":'<br><span style="color:#8a4b00">（試作版のため実際には送信されていません）</span>'}`);
+    $("main").querySelector(".big").textContent="✅";
+  }).catch(e=>{
+    busy(yes,false,"送信する");
+    $("cfTitle").textContent="送信に失敗しました";
+    $("cfBody").innerHTML=`<p>${esc(e.message||e)}</p><p>電波の良い場所でもう一度お試しください。</p>`;
+  });
+};
+
+function toast(msg){
+  const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+
+/* ==================== デモ（GASでは使われません） ==================== */
+const DEMO=(()=>{
+  if(isGAS) return null;
+  const PASSWORD="genesis";
+  $("demoHint").innerHTML=`試作版の合言葉：<b>${PASSWORD}</b>`;
+  const roles=["店長","副店長","主任","主任","リーダー","リーダー","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ"];
+  const mk=(pre,n)=>Array.from({length:n},(_,i)=>({name:`${pre}スタッフ${String(i+1).padStart(2,"0")}`,role:roles[i]||"スタッフ"}));
+  const R={stores:["オペラ","ゴッサム","エルシティ","総務・サービス部"],period:"2026年冬季",
+    members:{"オペラ":mk("オペラ",15),"ゴッサム":mk("ゴッサム",15),"エルシティ":mk("エルシティ",15),"総務・サービス部":[{name:"総務スタッフ01",role:"部長"},...mk("総務",8).slice(1)]}};
+  // 試作ではロック状態をこの端末に保存（本番はスプレッドシート）
+  const LK="bonusEvalDemoLocks";
+  const load=()=>{try{return JSON.parse(localStorage.getItem(LK))||{}}catch(e){return {}}};
+  const save=v=>{try{localStorage.setItem(LK,JSON.stringify(v))}catch(e){}};
+  const fails={}; // 再開パスワードを続けて間違えた回数（本番はサーバー側で数える）
+  const chk=p=>{if(String(p||"").normalize("NFKC").trim().toLowerCase()!==PASSWORD) throw new Error("合言葉が違います")};
+  return {
+    enter:p=>{chk(p);return R},
+    startSession:(p,n)=>{chk(p);const l=load()[n];return{state:!l?"new":l.state==="提出済"?"locked":"paused"}},
+    resumeSession:(p,n,c)=>{chk(p);const l=load()[n];if(!l)return{draft:{},code:null};if(l.state==="提出済")throw new Error("提出済みです");
+      fails[n]=fails[n]||0; if(fails[n]>=5)throw new Error("続けて5回間違えたため、この名前の入力を15分ほど止めています。時間をおいてやり直すか、管理者に連絡してください。");
+      if(String(c).trim()!==l.code){fails[n]++;throw new Error("再開パスワードが違います");} fails[n]=0; return{draft:l.draft,code:l.code}},
+    saveDraft:(p,n,d,c)=>{chk(p);const all=load(),l=all[n];if(l&&l.state==="提出済")throw new Error("提出済みです");
+      if(l&&String(c)!==l.code)throw new Error("この名前は別の端末で入力中です");const code=l?l.code:String(1000+Math.floor(Math.random()*9000));
+      all[n]={state:"入力中",code,draft:d};save(all);return{code}},
+    submitEvaluation:(p,pl,c)=>{chk(p);const all=load(),l=all[pl.evaluator];if(l&&l.state==="提出済")throw new Error("すでに提出済みです");
+      if(l&&String(c)!==l.code)throw new Error("この名前は別の端末で入力中です");all[pl.evaluator]={state:"提出済"};save(all);return{ok:true}}
+  };
+})();
+window.__mainOk = true; // 本体が最後まで読み込めた印（下の調べ役が見る）
+</script>
+<script>
+/* 調べ役：本体のプログラムが動かなかったとき（window.__mainOk が無い）、本体を1行ずつ読み直して、
+   読めなくなった行と文字コードを画面に赤い枠で表示する。GASが配信時に書き換えた後の中身を調べられる */
+(function () {
+  if (window.__mainOk) return;
+  try {
+    var ss = document.scripts, main = null;
+    for (var i = 0; i < ss.length; i++) { if (ss[i].text.indexOf("__mainOk") >= 0 && ss[i].text.length > 5000) main = ss[i]; }
+    var box = document.createElement("pre");
+    box.style.cssText = "white-space:pre-wrap;word-break:break-all;background:#fff0f0;color:#900;border:2px solid #c00;border-radius:8px;padding:10px;margin:10px;font-size:12px;line-height:1.5;position:relative;z-index:99";
+    var out = "\u753b\u9762\u306e\u30d7\u30ed\u30b0\u30e9\u30e0\u304c\u52d5\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u3053\u306e\u8d64\u3044\u67a0\u3092\u30b9\u30af\u30ea\u30fc\u30f3\u30b7\u30e7\u30c3\u30c8\u3067\u9001\u3063\u3066\u304f\u3060\u3055\u3044\u3002\n";
+    if (!main) { out += "main script not found (scripts=" + ss.length + ")\n"; }
+    else {
+      var lines = ("<script>" + main.text).split("\n"), whole = "";
+      try { new Function(main.text); out += "parse OK (runtime error?)\n"; } catch (e1) { whole = e1.name + ": " + e1.message; out += "whole: " + whole + "\n"; }
+      if (whole) {
+        // 最後から1行ずつ削り、同じエラーが消える直前の行を探す（途中で切ったときの別のエラーと区別するため）
+        var msg = e1msg(whole), bad = 0;
+        for (var n = lines.length; n >= 2; n--) {
+          var m2 = "";
+          try { new Function(lines.slice(1, n - 1).join("\n")); } catch (e2) { m2 = e2.message; }
+          if (m2 !== msg) { bad = n; break; }
+        }
+        if (bad) {
+          out += "line " + bad + " (from <script> line)\n";
+          for (var k = Math.max(1, bad - 3); k <= Math.min(lines.length, bad + 3); k++) {
+            var t = lines[k - 1] || "", codes = [];
+            for (var j = 0; j < t.length; j++) { var cc = t.charCodeAt(j); if (cc < 32 || cc > 126) codes.push(j + ":" + cc.toString(16)); }
+            out += (k === bad ? ">> " : "   ") + k + ": " + (t.length > 300 ? t.slice(0, 300) + "..." : t) + "\n";
+            if (k === bad) out += "      non-ascii: " + (codes.join(" ") || "(none)") + "\n";
+          }
+        } else out += "line not found\n";
+      }
+    }
+    box.textContent = out;
+    document.body.insertBefore(box, document.body.firstChild);
+  } catch (x) { try { document.body.insertAdjacentHTML("afterbegin", "<pre style='color:#900'>diag error: " + String(x) + "</pre>"); } catch (y) {} }
+  function e1msg(w) { return w.slice(w.indexOf(": ") + 2); }
+})();
+</script>
+</body>
+</html>

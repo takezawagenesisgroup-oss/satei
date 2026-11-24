@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>賞与査定 管理画面</title>
+<style>
+  :root{
+    --navy:#1d2a44; --navy2:#2c3d60; --bg:#f3f4f7; --card:#fff; --line:#e3e6ec;
+    --text:#1f2430; --sub:#6b7385; --good:#c99a06; --goodbg:#fff7d6; --bad:#3a3f4b; --badbg:#eceef2;
+    --c0:#e07a2e; --c1:#2f6fd0; --c2:#2a9d6f; --ok:#1f8a5b; --warn:#c2410c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:14px;line-height:1.55}
+  button,input,select,textarea{font-family:inherit}
+  header{background:var(--navy);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px}
+  header .t{font-weight:700;font-size:16px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header select{background:var(--navy2);color:#fff;border:0;border-radius:8px;padding:6px 8px;font-size:13px}
+  header .back{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:5px 10px;font-size:13px}
+  .wrap{max-width:860px;margin:0 auto;padding:12px 12px 60px}
+  .demo{background:#fff4e5;border:1px solid #f5c98a;color:#8a4b00;font-size:12px;border-radius:8px;padding:8px 10px;margin-bottom:12px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:18px;padding:6px 14px;font-size:13px;color:var(--sub);font-weight:600}
+  .tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  .sec h3{font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .sec h3 .sub{font-weight:500;color:var(--sub);font-size:12px;margin-left:auto}
+  .prow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .prow:last-child{border-bottom:0}
+  .badge{font-size:10px;border-radius:6px;padding:1px 6px;font-weight:700;white-space:nowrap}
+  .badge.ai{background:#e6ecfa;color:var(--navy2)}
+  .badge.no{background:#eef0f4;color:#9aa1ad}
+  /* 評価バロメーター（個人カルテ） */
+  .bv-top{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}
+  @media (max-width:560px){ .bv-top{grid-template-columns:1fr} }
+  .bv-gauge,.bv-radar{text-align:center}
+  .bv-gauge svg,.bv-radar svg{width:100%;max-width:300px;display:block;margin:0 auto}
+  .bv-word{display:inline-block;font-weight:800;font-size:14px;border-radius:999px;padding:3px 14px;margin-top:-2px}
+  .bv-item{border-top:1px solid var(--line);padding:12px 0 10px}
+  .bv-item:first-of-type{border-top:0}
+  .bv-hd{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+  .bv-hd .nm{font-weight:700;font-size:13px;flex:1;min-width:0}
+  .bv-hd .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  .bv-hd .st2{font-size:12px;font-weight:700;letter-spacing:.05em}
+  .bv-hd small{font-size:11px;color:var(--sub);margin-left:4px}
+  .bv-scale{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:16px 0 18px}
+  .bv-scale .c{height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;opacity:.38;transition:opacity .2s}
+  .bv-scale .c.on{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--navy)}
+  .bv-scale .dot{position:absolute;top:13px;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--navy);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .bv-scale .me{position:absolute;top:-14px;font-size:10px;color:var(--c1);font-weight:700;transform:translateX(-50%);white-space:nowrap}
+  .bv-scale .av{position:absolute;bottom:-16px;font-size:10px;color:var(--sub);transform:translateX(-50%);white-space:nowrap}
+  .bv-scale .av:before{content:"";position:absolute;left:50%;top:-6px;width:2px;height:6px;background:#9aa1ad;margin-left:-1px}
+  .bv-dist{display:flex;height:16px;border-radius:5px;overflow:hidden;background:#f1f2f5}
+  .bv-dist span{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;min-width:0;overflow:hidden}
+  .bv-sum{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:4px}
+  .legend{font-size:11px;color:var(--sub);display:flex;gap:12px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:3px}
+  .phead{display:flex;align-items:flex-end;gap:10px;margin:2px 2px 12px}
+  .phead h2{margin:0;font-size:22px}
+  .phead .meta{color:var(--sub);font-size:12px}
+  .phead .big{margin-left:auto;text-align:right}
+  .phead .big b{font-size:28px;line-height:1}
+  .phead .big small{display:block;color:var(--sub);font-size:11px}
+  /* AI */
+  .aibox{background:#f6f8fc;border-radius:10px;padding:12px;font-size:14px}
+  .pts{list-style:none;margin:0;padding:0}
+  .pts li{border-left:4px solid var(--good);background:var(--goodbg);border-radius:6px;padding:8px 10px;margin:8px 0}
+  .pts.bad li{border-left-color:var(--bad);background:var(--badbg)}
+  .pts .it{font-size:10px;font-weight:700;border-radius:5px;padding:0 5px;color:#fff;margin-right:6px}
+  .pts q{display:block;font-size:12px;color:var(--sub);margin-top:4px;quotes:"「" "」"}
+  .h4{font-size:12px;font-weight:700;color:var(--sub);margin:14px 0 4px}
+  ol.adv{margin:4px 0;padding-left:20px}
+  ol.adv li{margin:4px 0}
+  .btn{background:var(--navy);color:#fff;border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700}
+  .btn.sub{background:#eef0f4;color:var(--navy2)}
+  .btn:disabled{opacity:.5}
+  .small{font-size:11px;color:var(--sub)}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--sub);font-weight:600}
+  .up{color:var(--ok);font-size:10px}
+  .dn{color:var(--warn);font-size:10px}
+  /* comments */
+  details{border-top:1px solid var(--line)}
+  details:first-of-type{border-top:0}
+  summary{cursor:pointer;padding:8px 0;font-weight:700;font-size:13px}
+  .cm{display:flex;gap:8px;padding:6px 0;font-size:13px}
+  .cm .st{flex:0 0 46px;font-size:11px;letter-spacing:-1px;padding-top:2px}
+  .cm .st.p{color:var(--good)} .cm .st.n{color:var(--bad)} .cm .st.z{color:#9aa1ad}
+  .cm .by{font-size:11px;color:var(--sub)}
+  /* interview */
+  label.f{display:block;font-size:12px;color:var(--sub);margin:8px 0 3px}
+  .in{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px;background:#fff;color:var(--text)}
+  textarea.in{min-height:130px;resize:vertical}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .iv{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px}
+  .iv .hd{font-size:12px;color:var(--sub);display:flex;gap:8px;flex-wrap:wrap}
+  .iv .hd b{color:var(--text)}
+  .iv ul{margin:2px 0;padding-left:18px}
+  .center{text-align:center;padding:50px 20px;color:var(--sub)}
+  .spin{width:26px;height:26px;border:3px solid #dfe3ea;border-top-color:var(--navy);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 10px}
+  .spin.s{width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:-3px;margin:0 6px 0 0}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{color:var(--warn);font-size:12px;margin-top:6px}
+  .login{max-width:340px;margin:80px auto;background:#fff;border-radius:14px;padding:22px;border:1px solid var(--line)}
+  .login h2{margin:0 0 6px;font-size:18px}
+  .st{font-size:10px;border-radius:6px;padding:1px 6px;font-weight:700;white-space:nowrap}
+  .st.done{background:#e1f4ea;color:var(--ok)} .st.wip{background:#fdeee3;color:var(--warn)} .st.none{background:#eef0f4;color:#9aa1ad}
+  .cfg{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .cfg .in{flex:1;min-width:140px}
+  .codebig{font-size:30px;font-weight:800;letter-spacing:.2em;color:var(--navy);background:#f3f6fc;border-radius:10px;padding:8px 14px;display:inline-block;margin:6px 0}
+  .rank{display:inline-block;min-width:26px;text-align:center;font-weight:800;border-radius:6px;padding:1px 6px;background:var(--navy);color:#fff;font-size:12px}
+  .rank.lg{font-size:20px;padding:4px 12px;border-radius:10px}
+  .pos td.me{font-weight:700}
+  .pos .gap{font-size:10px}
+  .rk{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+  .rk button{min-width:46px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 10px;font-weight:800;font-size:15px;color:var(--navy)}
+  .rk button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  /* 一覧の1行（スマホ：名前・点数・ランクの下にバー／パソコン：1行） */
+  .orow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"nm sc rk" "bar bar bar";gap:6px 12px;align-items:center}
+  .orow .o-nm{grid-area:nm;min-width:0}
+  .orow .o-nm b{display:block;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+  .orow .o-nm small{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;color:var(--sub);font-size:11px;margin-top:2px}
+  .orow .o-sc{grid-area:sc;text-align:right;font-variant-numeric:tabular-nums;line-height:1.1}
+  .orow .o-sc b{font-size:17px}
+  .orow .o-sc small{display:block;font-size:10px;color:var(--sub)}
+  .orow .o-rk{grid-area:rk;text-align:center;min-width:40px}
+  .orow .o-bar{grid-area:bar}
+  @media (min-width:700px){ .orow{grid-template-columns:220px minmax(0,1fr) 70px 52px;grid-template-areas:"nm bar sc rk"} }
+  .mini{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;height:10px}
+  .mini i{border-radius:3px;opacity:.38}
+  .mini i.on{opacity:1}
+  .mini b{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--navy);border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+  .qrbox{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .qrbox img{width:160px;height:160px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .qrbox .u{flex:1;min-width:200px;word-break:break-all;font-size:12px}
+  /* 店舗別レポート（会議用） */
+  .rp-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+  .rp-bar select{width:auto;min-width:0}
+  .rp-wrap{overflow-x:auto}
+  .wrap:has(.rep){max-width:1440px}
+  table.rp{width:100%;min-width:980px;border-collapse:collapse;font-size:12px}
+  table.rp th,table.rp td{border:1px solid var(--line);padding:6px 6px;vertical-align:top;text-align:left;white-space:normal}
+  table.rp th{background:#f3f5f9;color:var(--sub);font-weight:700;font-size:11px;white-space:nowrap}
+  table.rp th.w{white-space:normal}
+  table.rp td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  table.rp td.nm b{font-size:13px}
+  table.rp td.ai{min-width:220px;max-width:320px}
+  table.rp td.adv{min-width:220px;max-width:320px}
+  table.rp ul{margin:2px 0 0;padding-left:16px}
+  table.rp li{margin:1px 0}
+  table.rp .tag{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:0 5px;margin-right:4px}
+  table.rp .tag.g{background:#fff4cc;color:#7a5c00}
+  table.rp .tag.b{background:#eceef2;color:#3a3f4b}
+  table.rp tr.none td{color:#9aa1ad}
+  .rp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+  .rp-head h3{margin:0;font-size:15px}
+  .rp-head .small{margin-left:auto}
+  #poster{display:none}
+  .hidden{display:none!important}
+  /* 印刷（面談で紙・PDFにして使う） */
+  @page land{size:A4 landscape;margin:9mm}
+  @media print{
+    @page{size:A4;margin:12mm}
+    body,html{background:#fff;font-size:11px}
+    header,.noprint,button,#lkSec,.err{display:none!important}
+    .wrap{max-width:none;padding:0}
+    .sec{break-inside:avoid;border:1px solid #ccc;box-shadow:none;margin-bottom:8px;padding:10px}
+    #ivSec .two,#ivSec label,#ivSec textarea,#finSec .rk,#finSec textarea,#finSec label{display:none!important}
+    details>summary{list-style:none}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    /* 店舗別レポートは A4 横向き。店舗ごとに改ページ */
+    .rep{page:land}
+    .rep .sec{break-inside:auto;border:0;padding:0}
+    .rep .rp-store + .rp-store{break-before:page}
+    .rep .rp-wrap{overflow:visible}
+    table.rp{min-width:0;font-size:9.5px}
+    table.rp tr{break-inside:avoid}
+    table.rp thead{display:table-header-group}
+    /* 掲示用ポスター（「ポスターを印刷」のときだけ） */
+    body.poster #app{display:none!important}
+    body.poster #poster{display:block!important;font-size:14px;color:#000}
+  }
+  #poster .pt{font-size:30px;font-weight:800;text-align:center;margin:0 0 4px}
+  #poster .pp{text-align:center;font-size:16px;margin:0 0 14px}
+  #poster .pq{text-align:center;margin:8px 0 6px}
+  #poster .pq svg{width:95mm;height:95mm}
+  #poster .pu{text-align:center;font-size:10px;color:#444;word-break:break-all;margin-bottom:14px}
+  #poster ol{font-size:16px;line-height:1.9;margin:0 0 12px;padding-left:1.6em}
+  #poster .pk{border:2px solid #000;border-radius:10px;padding:10px 14px;font-size:17px;text-align:center;margin:10px 0}
+  #poster .pn{font-size:12.5px;line-height:1.7;border-top:1px solid #999;padding-top:8px}
+  svg text{font-family:inherit}
+</style>
+</head>
+<body>
+<header id="hdr" class="hidden">
+  <button class="back hidden" id="backBtn" type="button">‹ 一覧</button>
+  <div class="t" id="hTitle">賞与査定 管理画面</div>
+  <select id="periodSel"></select>
+  <button class="back" id="acctBtn" type="button">アカウント</button>
+</header>
+<div id="poster"></div>
+<div class="wrap" id="app">
+  <div class="login" id="login">
+    <h2>管理画面</h2>
+    <p class="small">登録されたメールアドレスとパスワードを入力してください。</p>
+    <input class="in" id="em" type="email" autocomplete="username" placeholder="メールアドレス" style="margin-bottom:8px">
+    <input class="in" id="pw" type="password" autocomplete="current-password" placeholder="パスワード">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" id="loginBtn" type="button" style="width:100%;margin-top:12px">ログイン</button>
+  </div>
+</div>
+
+<script>window.GENESIS_API="https:\/\/script.google.com\/macros\/s\/AKfycbxV6Nvcrja7Mhj346IcAL9Vn2h31YU-nJ251_CYQq94xbHcKQWcTOgQWPBp6l73ctQXAg\/exec";</script>
+<script>
+/* ============================================================
+   設定
+   ============================================================ */
+const STORES=["オペラ","ゴッサム","エルシティ","総務・サービス部"];
+const ITEMS=["お客様を楽しませる行動","会社の利益となる行動","働く仲間のための行動"];
+const SHORT=["お客様","利益","仲間"];
+const ICOL=["var(--c0)","var(--c1)","var(--c2)"];
+const ICOLHEX=["#e07a2e","#2f6fd0","#2a9d6f"];
+const isGAS=typeof google!=="undefined"&&google.script&&google.script.run;
+
+/* ============================================================
+   API（本番＝GAS、試作＝デモデータ）
+   ============================================================ */
+// ログイン券（サーバーが発行。有効6時間）。端末には保存しない
+let TOKEN="", ME=null;
+/* 画面をGoogle以外の場所（GitHub Pagesなど）に置いたときは、ここに本番のURLが入る（tools/build-static.js）。
+   複数のGoogleアカウントにログインした端末でも開けるように、ログイン情報なしでサーバーを呼ぶ */
+const API_URL=(typeof window!=="undefined"&&window.GENESIS_API)||"";
+function callApi(fn,args){
+  return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:args})})
+    .then(r=>r.json()).catch(()=>{throw new Error("サーバーと通信できませんでした。電波の良いところで、もう一度お試しください")})
+    .then(d=>{ if(!d||!d.ok) throw new Error(d&&d.error||"エラーが起きました"); return d.result; });
+}
+function api(fn,...args){
+  const a=fn==="adminLogin"?args:[TOKEN,...args];
+  const p=API_URL?callApi(fn,a).then(r=>{
+      // 配るURL・QRは、Googleの外に置いた入力フォーム（この管理画面と同じ場所の index.html）にする
+      if(fn==="adminOverview"&&r&&r.formUrl) r.formUrl=new URL("./",location.href).href;
+      return r;})
+    :isGAS?new Promise((ok,ng)=>google.script.run.withSuccessHandler(ok).withFailureHandler(ng)[fn](...a))
+    :new Promise((ok,ng)=>setTimeout(()=>{try{ok(DEMO[fn](...args))}catch(e){ng(e)}},fn==="adminAnalyze"||fn==="adminSaveInterview"?900:150));
+  return p.catch(e=>{ if(/ログインの有効期限/.test(e&&e.message||e)) showLogin(e.message||e); throw e; });
+}
+
+/* ============================================================
+   状態・ユーティリティ
+   ============================================================ */
+let S={period:null,periods:[],store:STORES[0],person:null,overview:null};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sgn=v=>v===null||v===undefined?"－":(v>0?"+":"")+Number(v).toFixed(2);
+const pts100=v=>v===null||v===undefined?"－":Math.round((v+3)/6*100);
+const stars=v=>v>0?"☆".repeat(v):v<0?"★".repeat(-v):"－";
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+
+/* ============================================================
+   ログイン
+   ============================================================ */
+const LOGIN_HTML=$("app").innerHTML;
+function bindLogin(){
+  $("loginBtn").onclick=login;
+  $("pw").onkeydown=e=>{if(e.key==="Enter")login()};
+  if(!isGAS){ $("em").value="owner@example.com"; $("pw").value="demo"; }
+}
+bindLogin();
+function login(){
+  $("loginErr").textContent="";
+  $("loginBtn").disabled=true;
+  api("adminLogin",$("em").value,$("pw").value).then(r=>{
+    TOKEN=r.token; ME=r.me; S.period=r.period; S.periods=r.periods; S.person=null;
+    $("hdr").classList.remove("hidden");
+    fillPeriods(); loadOverview();
+  }).catch(e=>{$("loginErr").textContent=e.message||e;$("loginBtn").disabled=false});
+}
+function showLogin(msg){
+  TOKEN=""; ME=null; S.person=null; S.overview=null;
+  $("hdr").classList.add("hidden"); $("app").innerHTML=LOGIN_HTML; bindLogin();
+  if(msg) $("loginErr").textContent=msg;
+}
+
+/* ============================================================
+   アカウント（パスワード変更・ログアウト・権限の管理）
+   ============================================================ */
+$("acctBtn").onclick=openAccount;
+function openAccount(){
+  S.person="__acct"; $("backBtn").classList.remove("hidden"); $("hTitle").textContent="アカウント";
+  const owner=ME&&ME.role==="オーナー";
+  let h=`<div class="sec"><h3>ログイン中<span class="sub">${esc(ME.role)}</span></h3>
+    <div><b>${esc(ME.name||ME.email)}</b> <span class="small">${esc(ME.email)}</span></div>
+    <button class="btn sub" id="logoutBtn" type="button" style="margin-top:10px">ログアウト</button></div>`;
+  h+=`<div class="sec"><h3>パスワードの変更</h3>
+    <input class="in" id="opw" type="password" autocomplete="current-password" placeholder="今のパスワード" style="margin-bottom:8px">
+    <input class="in" id="npw" type="password" autocomplete="new-password" placeholder="新しいパスワード（8文字以上）" style="margin-bottom:8px">
+    <input class="in" id="npw2" type="password" autocomplete="new-password" placeholder="新しいパスワード（もう一度）">
+    <button class="btn" id="pwBtn" type="button" style="margin-top:10px">変更する</button><div class="small" id="pwMsg" style="margin-top:6px"></div></div>`;
+  if(owner) h+=`<div class="sec"><h3>評価を見られる人（権限）<span class="sub">オーナーだけが変更できます</span></h3>
+    <div id="users"><div class="center"><div class="spin"></div></div></div>
+    <label class="f" style="margin-top:12px">追加する人</label>
+    <div class="two"><input class="in" id="nuEmail" type="email" placeholder="メールアドレス"><input class="in" id="nuName" placeholder="名前（例：廣田）"></div>
+    <div class="cfg" style="margin-top:8px"><select class="in" id="nuRole"><option value="閲覧者">閲覧者</option><option value="オーナー">オーナー（権限も変更できる）</option></select>
+    <button class="btn" id="nuBtn" type="button">追加する</button></div>
+    <div class="small" id="nuMsg" style="margin-top:6px">追加すると初期パスワードが表示されます。本人に伝え、ログイン後に「パスワードの変更」で変えてもらってください。</div></div>`;
+  if(owner) h+=`<div class="sec"><h3>査定期のデータをまとめて削除<span class="sub">オーナーだけ</span></h3>
+    <p class="small" style="margin-top:0">選んだ査定期の<b>回答・入力状況・AI分析・面談記録・最終評価</b>をすべて削除します。試しに入力したデータを本番の前に消すときなどに使います。名簿・設定・管理画面のアカウントは消えません。<b>元に戻せません。</b></p>
+    <label class="f">削除する査定期</label>
+    <select class="in" id="cpSel">${S.periods.slice().reverse().map(x=>`<option>${esc(x)}</option>`).join("")}</select>
+    <label class="f" style="margin-top:8px">確認のため、上の査定期の名前をそのまま入力</label>
+    <input class="in" id="cpConfirm" placeholder="例：2026年冬季" autocomplete="off">
+    <button class="btn sub" id="cpBtn" type="button" style="margin-top:10px;color:var(--warn)">この査定期のデータを削除する</button>
+    <div class="small" id="cpMsg" style="margin-top:6px"></div></div>`;
+  $("app").innerHTML=h; window.scrollTo(0,0);
+  $("logoutBtn").onclick=()=>{api("adminLogout").finally(()=>showLogin());};
+  $("pwBtn").onclick=()=>{
+    if($("npw").value!==$("npw2").value){$("pwMsg").textContent="新しいパスワードが2回で違います";return;}
+    const b=$("pwBtn"); b.disabled=true;
+    api("adminChangePassword",$("opw").value,$("npw").value).then(()=>{b.disabled=false;
+      ["opw","npw","npw2"].forEach(id=>$(id).value=""); $("pwMsg").textContent="✅ 変更しました。次回から新しいパスワードでログインしてください。";})
+      .catch(e=>{b.disabled=false;$("pwMsg").textContent=e.message||e;});
+  };
+  if(!owner) return;
+  $("cpBtn").onclick=()=>{
+    const per=$("cpSel").value, b=$("cpBtn");
+    if($("cpConfirm").value.trim()!==per){$("cpMsg").textContent=`確認欄に「${per}」と入力してください`;return;}
+    if(!confirm(`「${per}」の回答・入力状況・AI分析・面談記録・最終評価をすべて削除します。元に戻せません。本当によろしいですか？`)) return;
+    b.disabled=true;
+    api("adminClearPeriod",per,$("cpConfirm").value).then(x=>{b.disabled=false; $("cpConfirm").value="";
+      const c=x.counts; S.periods=x.periods; if(!S.periods.includes(S.period)) S.period=S.periods[S.periods.length-1]; fillPeriods(); S.overview=null;
+      $("cpMsg").innerHTML=`🗑 「${esc(x.period)}」を削除しました（回答 ${c.responses}件・入力状況 ${c.lock}件・AI分析 ${c.ai}件・面談記録 ${c.interviews}件・最終評価 ${c.finals}件）。`;
+    }).catch(e=>{b.disabled=false;$("cpMsg").textContent=e.message||e;});
+  };
+  const showPw=(email,pw)=>`<div style="margin-top:6px">${esc(email)} の初期パスワード：<div class="codebig" style="letter-spacing:.08em">${esc(pw)}</div><div class="small">この画面を閉じると二度と表示されません。本人に伝えてください。</div></div>`;
+  const loadUsers=()=>api("adminUsers").then(us=>{
+    if(!$("users")) return; // 読み込み中に別の画面へ移った
+    $("users").innerHTML=us.map(u=>`<div class="prow" style="cursor:default">
+      <div style="flex:1;min-width:0"><b>${esc(u.name||"（名前なし）")}</b> <span class="st ${u.role==="オーナー"?"done":"none"}">${esc(u.role)}</span>
+        <div class="small" style="word-break:break-all">${esc(u.email)}｜最終ログイン ${esc(u.last||"なし")}</div></div>
+      ${u.email===ME.email?'<span class="small">あなた</span>':`<button class="btn sub" style="padding:7px 10px;font-size:12px" type="button" data-reset="${esc(u.email)}">パスワード再発行</button>
+      <button class="btn sub" style="padding:7px 10px;font-size:12px" type="button" data-del="${esc(u.email)}">削除</button>`}</div>`).join("");
+    document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+      if(!confirm(b.dataset.del+" を削除します。この人は評価を見られなくなります。よろしいですか？"))return;
+      b.disabled=true; api("adminRemoveUser",b.dataset.del).then(loadUsers).catch(e=>{b.disabled=false;$("nuMsg").textContent=e.message||e;});});
+    document.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{
+      if(!confirm(b.dataset.reset+" のパスワードを新しく発行します。今のパスワードは使えなくなります。よろしいですか？"))return;
+      b.disabled=true; api("adminResetUserPassword",b.dataset.reset).then(x=>{b.disabled=false;$("nuMsg").innerHTML=showPw(x.email,x.password);})
+        .catch(e=>{b.disabled=false;$("nuMsg").textContent=e.message||e;});});
+  }).catch(e=>{if($("users"))$("users").textContent=e.message||e;});
+  loadUsers();
+  $("nuBtn").onclick=()=>{const b=$("nuBtn"); b.disabled=true;
+    api("adminAddUser",{email:$("nuEmail").value,name:$("nuName").value,role:$("nuRole").value}).then(x=>{b.disabled=false;
+      $("nuEmail").value=""; $("nuName").value=""; $("nuMsg").innerHTML="✅ 追加しました。"+showPw(x.email,x.password); loadUsers();})
+      .catch(e=>{b.disabled=false;$("nuMsg").textContent=e.message||e;});};
+}
+
+function fillPeriods(){
+  $("periodSel").innerHTML=S.periods.slice().reverse().map(p=>`<option ${p===S.period?"selected":""}>${esc(p)}</option>`).join("");
+}
+$("periodSel").onchange=()=>{S.period=$("periodSel").value; S.person==="__acct"?0:S.person==="__report"?openReport():S.person?openPerson(S.person):loadOverview();};
+$("backBtn").onclick=()=>{S.person=null; loadOverview();};
+
+function loading(msg){ $("app").innerHTML=`<div class="center"><div class="spin"></div>${esc(msg||"読み込み中…")}</div>`; }
+function fail(e){ $("app").innerHTML=`<div class="center">エラー：${esc(e.message||e)}</div>`; }
+
+/* ============================================================
+   一覧
+   ============================================================ */
+function loadOverview(){
+  $("backBtn").classList.add("hidden"); $("hTitle").textContent="賞与査定 管理画面";
+  loading(); api("adminOverview",S.period).then(r=>{S.overview=r; renderOverview();}).catch(fail);
+}
+function renderOverview(){
+  const r=S.overview;
+  const ppl=r.people.filter(p=>p.store===S.store);
+  const sub=r.people.filter(p=>p.status==="提出済").length, wip=r.people.filter(p=>p.status==="入力中").length;
+  const stBadge=p=>`<span class="st ${p.status==="提出済"?"done":p.status==="入力中"?"wip":"none"}">${esc(p.status)}</span>`;
+  let h=isGAS?"":`<div class="demo">試作版（デモデータ）です。人をタップすると個人カルテが開きます。AI分析・面談要約は試作用の簡易版で動きます。</div>`;
+  if(r.trial) h+=`<div class="demo"><b>試験運転中</b>です。表示されているのはテスト用のデータです。本番の前に、スプレッドシートのメニュー「賞与査定 → 試験運転を終える」を実行してください。</div>`;
+  h+=`<div class="rp-bar"><button class="btn sub" id="rpOpen" type="button">📋 店舗別レポート（会議用）</button></div>`;
+  h+=`<div class="tabs">${STORES.map(s=>`<button type="button" class="tab ${s===S.store?"active":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>`;
+  h+=`<div class="sec"><h3>${esc(S.store)}<span class="sub">${esc(r.period)}｜全体の提出 ${sub}/${r.people.length}人${wip?`（入力中 ${wip}人）`:""}</span></h3>
+    <div class="legend" style="margin-bottom:6px"><span>バー：★★★〜☆☆☆（他者評価の平均）</span><span>数字：総合平均と100点換算</span><span>右端：最終評価</span></div>`;
+  h+=ppl.map(p=>`<div class="prow orow" data-n="${esc(p.name)}">
+      <div class="o-nm"><b>${esc(p.name)}</b><small>${esc(p.role||"－")}｜${p.n}人評価 ${r.isCurrent?stBadge(p):""}<span class="badge ${p.analyzed?"ai":"no"}">${p.analyzed?"AI済":"AI未"}</span></small></div>
+      <div class="o-sc"><b style="color:${p.overall===null?"#9aa1ad":p.overall<-.3?"#3a3f4b":p.overall>.3?"#a07a00":"var(--text)"}">${sgn(p.overall)}</b><small>${p.overall===null?"":pts100(p.overall)+"点"}</small></div>
+      <div class="o-rk">${p.rank?`<span class="rank" title="最終評価">${esc(p.rank)}</span>`:`<span class="badge no">未評価</span>`}</div>
+      <div class="o-bar">${miniBar(p.overall)}</div>
+    </div>`).join("")||`<div class="small">名簿に登録がありません</div>`;
+  h+=`</div>`;
+  const op=r.open||{state:"open",from:"",to:""};
+  const opLbl=s=>s==="before"?'<span class="st none">受付前</span>':s==="after"?'<span class="st none">受付終了</span>':'<span class="st done">受付中</span>';
+  h+=`<div class="sec"><h3>受付設定<span class="sub" id="opNow">${opLbl(op.state)}</span></h3>
+    <label class="f">合言葉（従業員が最初に入力するもの）</label><input class="in" id="ppIn" value="${esc(r.passphrase)}" placeholder="合言葉">
+    <div class="two"><div><label class="f">受付開始日（0:00から）</label><input class="in" type="date" id="opFrom" value="${esc(op.from)}"></div>
+    <div><label class="f">受付終了日（23:59まで）</label><input class="in" type="date" id="opTo" value="${esc(op.to)}"></div></div>
+    <button class="btn" id="ppBtn" type="button" style="margin-top:10px">保存する</button>
+    <div class="small" id="ppMsg" style="margin-top:6px">期間外は合言葉が合っていても入れません（入力途中の人の一時保存・送信も止まります）。日付を空欄にすると制限なし。合言葉は査定のたびに変えるのがおすすめです。</div></div>`;
+  h+=`<div class="sec" id="qrSec"><h3>配布用QRコード<span class="sub">従業員用の入力フォーム</span></h3>${qrHtml(r)}</div>`;
+  $("app").innerHTML=h;
+  bindQR(r);
+  $("ppBtn").onclick=()=>{const b=$("ppBtn");b.disabled=true;
+    api("adminSetConfig",{passphrase:$("ppIn").value,from:$("opFrom").value,to:$("opTo").value}).then(x=>{b.disabled=false;
+      S.overview.passphrase=x.passphrase;S.overview.open=x.open;$("opNow").innerHTML=opLbl(x.open.state);
+      $("qrSec").innerHTML=`<h3>配布用QRコード<span class="sub">従業員用の入力フォーム</span></h3>${qrHtml(S.overview)}`; bindQR(S.overview);
+      $("ppMsg").innerHTML=`✅ 保存しました。合言葉「<b>${esc(x.passphrase)}</b>」／受付 ${esc(x.open.from||"制限なし")} 〜 ${esc(x.open.to||"制限なし")}`;})
+      .catch(e=>{b.disabled=false;$("ppMsg").textContent=e.message||e;});};
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{S.store=b.dataset.s;renderOverview();});
+  document.querySelectorAll(".prow").forEach(el=>el.onclick=()=>openPerson(el.dataset.n));
+  $("rpOpen").onclick=openReport;
+}
+
+/* ============================================================
+   個人カルテ
+   ============================================================ */
+function openPerson(name){
+  S.person=name; $("backBtn").classList.remove("hidden"); $("hTitle").textContent=name;
+  loading(); window.scrollTo(0,0);
+  api("adminPerson",S.period,name).then(renderPerson).catch(fail);
+}
+function renderPerson(p){
+  S.p=p;
+  const b=p.bench||{};
+  let h=`<div class="phead"><div><h2>${esc(p.name)} ${p.final?`<span class="rank lg" title="最終評価">${esc(p.final.rank)}</span>`:""}</h2>
+      <div class="meta">${esc(p.store)}｜${esc(p.role)}｜${esc(p.period)}｜評価者 ${p.n}人${b.rank?`｜店舗内 ${b.rank}位／${b.count}人`:""}</div></div>
+    <div class="big"><b>${sgn(p.overall)}</b><small>総合（100点換算 ${pts100(p.overall)}）</small></div></div>
+    <div class="noprint" style="text-align:right;margin:-6px 2px 10px"><button class="btn sub" id="printBtn" type="button" style="padding:7px 12px;font-size:12px">🖨 印刷・PDF（面談用）</button></div>`;
+
+  /* 入力状況（今期のみ） */
+  if(p.isCurrent){
+    const st=p.status.state;
+    h+=`<div class="sec" id="lkSec"><h3>この人の入力状況<span class="sub">${esc(p.status.at||"")}</span></h3>
+      <div class="cfg"><span class="st ${st==="提出済"?"done":st==="入力中"?"wip":"none"}" style="font-size:12px;padding:3px 10px">${esc(st)}</span>
+      ${st!=="未提出"?`<button class="btn sub" id="ulBtn" type="button">ロック解除（再開パスワードを再発行）</button>
+        <button class="btn sub" id="delBtn" type="button" style="color:var(--warn)">この人の入力を削除</button>`:""}</div>
+      <div id="ulMsg" class="small" style="margin-top:6px">${st==="提出済"?"解除すると、提出した内容を下書きに戻して本人が直せるようになります。":st==="入力中"?"本人が再開パスワードを忘れたときに使います。":"まだ入力していません。"}</div></div>`;
+  }
+
+  /* バロメーター */
+  h+=`<div class="sec"><h3>評価バロメーター<span class="sub">他者評価の平均（☆=+1　★=−1）</span></h3>${baroHtml(p)}</div>`;
+
+  /* 店舗内での位置・評価の内訳 */
+  h+=`<div class="sec"><h3>店舗内での位置・評価の内訳<span class="sub">${esc(p.period)}</span></h3>${posHtml(p)}</div>`;
+
+  /* AI分析 */
+  h+=`<div class="sec" id="aiSec">${aiHtml(p)}</div>`;
+
+  /* 推移 */
+  h+=`<div class="sec"><h3>前回との比較・推移</h3>${historyHtml(p)}</div>`;
+
+  /* コメント */
+  h+=`<div class="sec"><h3>評価コメント<span class="sub">${p.comments.length}件</span></h3>${commentsHtml(p)}</div>`;
+
+  /* 面談 */
+  h+=`<div class="sec" id="ivSec">${ivHtml(p)}</div>`;
+
+  /* 最終評価 */
+  h+=`<div class="sec" id="finSec">${finHtml(p)}</div>`;
+
+  $("app").innerHTML=h;
+  bindAI(); bindIV(); bindFin();
+  $("printBtn").onclick=printKarte;
+  const ub=$("ulBtn");
+  if(ub) ub.onclick=()=>{ub.disabled=true;
+    api("adminUnlock",p.name).then(x=>{ub.remove();
+      const sp=document.querySelector("#lkSec .st"); if(sp){sp.className="st wip";sp.textContent="入力中";}
+      $("ulMsg").innerHTML=`ロックを解除しました。本人に次の再開パスワードを伝えてください。<br><span class="codebig">${esc(x.code)}</span><br>名前を選んだあと、このパスワードで続きから入力できます。`;})
+      .catch(e=>{ub.disabled=false;$("ulMsg").textContent=e.message||e;});};
+  const db=$("delBtn");
+  if(db) db.onclick=()=>{
+    if(!confirm(`${p.name} さんが今期（${p.period}）に入力・送信した評価をすべて削除し、「未提出」に戻します。\n${p.name} さんが受けた評価（ほかの人が付けたもの）は消えません。\n削除すると元に戻せません。よろしいですか？`)) return;
+    db.disabled=true;
+    api("adminDeleteEntry",p.name).then(x=>{
+      if(S.overview){const q=S.overview.people.find(o=>o.name===p.name); if(q){q.status="未提出";q.statusAt="";}}
+      S.p.status={state:"未提出",at:""}; renderPerson(S.p);
+      $("ulMsg").innerHTML=`🗑 削除しました（評価 ${x.rows}件）。${esc(p.name)} さんは「未提出」に戻り、最初から入力できます。<br><span class="small">この人が付けた評価が消えたので、ほかの人の点数も変わることがあります。一覧を開き直すと反映されます。</span>`;
+    }).catch(e=>{db.disabled=false;$("ulMsg").textContent=e.message||e;});
+  };
+}
+
+function aiHtml(p){
+  const a=p.analysis;
+  if(!a) return `<h3>AI分析</h3><p class="small">コメントと点数から、良い点・改善点・アドバイスをまとめます。</p>
+    <button class="btn" id="aiBtn" type="button">AIで分析する</button><div class="err" id="aiErr"></div>`;
+  const li=(arr,cls)=>arr&&arr.length?`<ul class="pts ${cls}">${arr.map(g=>{
+      const i=SHORT.indexOf(g.item);
+      return `<li><span class="it" style="background:${ICOLHEX[i]||"#888"}">${esc(g.item)}</span>${esc(g.point)}${g.quote?`<q>${esc(g.quote)}</q><span class="small">— ${esc(g.by||"")}</span>`:""}</li>`}).join("")}</ul>`:`<p class="small">特になし</p>`;
+  return `<h3>AI分析<span class="sub">${esc(p.analyzedAt)}</span></h3>
+    <div class="aibox">${esc(a.overall)}</div>
+    <div class="h4">👍 良い部分</div>${li(a.good,"")}
+    <div class="h4">⚠️ 改善が必要な部分</div>${li(a.bad,"bad")}
+    ${a.gap?`<div class="h4">自己評価とのギャップ</div><div>${esc(a.gap)}</div>`:""}
+    ${a.followup?`<div class="h4">前回の指導からの変化</div><div>${esc(a.followup)}</div>`:""}
+    ${a.position?`<div class="h4">店舗内での位置・推移</div><div>${esc(a.position)}</div>`:""}
+    <div class="h4">💡 今後どうしたらいいか</div><ol class="adv">${(a.advice||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+    <div class="h4">🗣 面談で聞くとよいこと</div><ul class="adv" style="padding-left:20px;margin:4px 0">${(a.interview_points||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <div style="margin-top:12px"><button class="btn sub" id="aiBtn" type="button">再分析する</button><div class="err" id="aiErr"></div></div>`;
+}
+function bindAI(){
+  const b=$("aiBtn"); if(!b) return;
+  b.onclick=()=>{
+    b.disabled=true; b.innerHTML=`<span class="spin s"></span>分析中…（20〜30秒）`;
+    api("adminAnalyze",S.period,S.p.name).then(r=>{
+      S.p.analysis=r.analysis; S.p.analyzedAt=r.analyzedAt;
+      $("aiSec").innerHTML=aiHtml(S.p); bindAI();
+    }).catch(e=>{b.disabled=false;b.textContent="AIで分析する";$("aiErr").textContent=e.message||e;});
+  };
+}
+
+/* ---------- QRコード（外部ライブラリなし。バイトモード・誤り訂正M・バージョン1〜10＝最大213バイト） ---------- */
+function makeQR(text){
+  const data=[...unescape(encodeURIComponent(text))].map(c=>c.charCodeAt(0)); // UTF-8
+  // バージョンごと：[誤り訂正の語数/ブロック, ブロック数1, データ語数1, ブロック数2, データ語数2]
+  const EC=[null,[10,1,16,0,0],[16,1,28,0,0],[26,1,44,0,0],[18,2,32,0,0],[24,2,43,0,0],[16,4,27,0,0],[18,4,31,0,0],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44]];
+  const AL=[null,[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+  let ver=0;
+  for(let v=1;v<=10;v++){const e=EC[v],cap=e[1]*e[2]+e[3]*e[4],cc=v<10?8:16;if(4+cc+data.length*8<=cap*8){ver=v;break;}}
+  if(!ver) throw new Error("URLが長すぎてQRコードにできません");
+  const e=EC[ver], cap=e[1]*e[2]+e[3]*e[4], cc=ver<10?8:16;
+  // ビット列
+  const bits=[]; const put=(v,n)=>{for(let i=n-1;i>=0;i--)bits.push((v>>>i)&1);};
+  put(4,4); put(data.length,cc); data.forEach(b=>put(b,8));
+  put(0,Math.min(4,cap*8-bits.length)); while(bits.length%8)bits.push(0);
+  const cw=[]; for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=b<<1|bits[i+j];cw.push(b);}
+  for(let p=0;cw.length<cap;p++) cw.push(p%2?0x11:0xEC);
+  // リード・ソロモン
+  const EXP=new Array(512),LOG=new Array(256); let x=1;
+  for(let i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&256)x^=0x11D;} for(let i=255;i<512;i++)EXP[i]=EXP[i-255];
+  const mul=(a,b)=>a&&b?EXP[LOG[a]+LOG[b]]:0;
+  let gen=[1]; for(let i=0;i<e[0];i++){const g=new Array(gen.length+1).fill(0);gen.forEach((c,j)=>{g[j]^=c;g[j+1]^=mul(c,EXP[i]);});gen=g;}
+  const rs=d=>{const r=d.concat(new Array(e[0]).fill(0));for(let i=0;i<d.length;i++){const f=r[i];if(f)for(let j=0;j<gen.length;j++)r[i+j]^=mul(gen[j],f);}return r.slice(d.length);};
+  const blocks=[]; let k=0;
+  for(let i=0;i<e[1]+e[3];i++){const n=i<e[1]?e[2]:e[4];const d=cw.slice(k,k+n);k+=n;blocks.push({d,ec:rs(d)});}
+  const all=[]; const mx=Math.max(...blocks.map(b=>b.d.length));
+  for(let i=0;i<mx;i++)blocks.forEach(b=>{if(i<b.d.length)all.push(b.d[i]);});
+  for(let i=0;i<e[0];i++)blocks.forEach(b=>all.push(b.ec[i]));
+  // 模様を置く
+  const N=17+4*ver, M=[...Array(N)].map(()=>new Array(N).fill(false)), F=[...Array(N)].map(()=>new Array(N).fill(false));
+  const set=(c,r,v)=>{if(r>=0&&r<N&&c>=0&&c<N){M[r][c]=v;F[r][c]=true;}};
+  for(let i=0;i<N;i++){set(6,i,i%2===0);set(i,6,i%2===0);}
+  [[3,3],[N-4,3],[3,N-4]].forEach(([cx,cy])=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy));set(cx+dx,cy+dy,d!==2&&d!==4);}});
+  const al=AL[ver], L=al.length-1;
+  al.forEach((ay,i)=>al.forEach((ax,j)=>{if((i===0&&j===0)||(i===0&&j===L)||(i===L&&j===0))return;
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)set(ax+dx,ay+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1);}));
+  const fmt=mask=>{const d=mask; let r=d; for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537); const b=((d<<10)|r)^0x5412; const g=i=>((b>>>i)&1)===1;
+    for(let i=0;i<=5;i++)set(8,i,g(i)); set(8,7,g(6)); set(8,8,g(7)); set(7,8,g(8)); for(let i=9;i<15;i++)set(14-i,8,g(i));
+    for(let i=0;i<8;i++)set(N-1-i,8,g(i)); for(let i=8;i<15;i++)set(8,N-15+i,g(i)); set(8,N-8,true);};
+  fmt(0);
+  if(ver>=7){let r=ver;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=ver<<12|r;
+    for(let i=0;i<18;i++){const v=((b>>>i)&1)===1,a=N-11+i%3,c=Math.floor(i/3);set(a,c,v);set(c,a,v);}}
+  // データを置く（右下から2列ずつジグザグ）
+  let bi=0; const tot=all.length*8;
+  for(let right=N-1;right>=1;right-=2){ if(right===6)right=5;
+    for(let v=0;v<N;v++)for(let j=0;j<2;j++){const c=right-j,up=((right+1)&2)===0,r=up?N-1-v:v;
+      if(!F[r][c]&&bi<tot){M[r][c]=((all[bi>>>3]>>>(7-(bi&7)))&1)===1;bi++;}}}
+  // マスク（8種類から読み取りやすいものを選ぶ）
+  const MF=[(c,r)=>(r+c)%2===0,(c,r)=>r%2===0,(c,r)=>c%3===0,(c,r)=>(r+c)%3===0,(c,r)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,
+    (c,r)=>r*c%2+r*c%3===0,(c,r)=>(r*c%2+r*c%3)%2===0,(c,r)=>((r+c)%2+r*c%3)%2===0];
+  const apply=m=>{for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(!F[r][c]&&MF[m](c,r))M[r][c]=!M[r][c];};
+  const penalty=()=>{let p=0; const line=get=>{let run=1;for(let i=1;i<N;i++){if(get(i)===get(i-1)){run++;if(run===5)p+=3;else if(run>5)p++;}else run=1;}
+      const s=[...Array(N)].map((_,i)=>get(i)?1:0).join(""),q=/(?=10111010000|00001011101)/g; p+=40*((s.match(q)||[]).length);};
+    for(let r=0;r<N;r++)line(i=>M[r][i]); for(let c=0;c<N;c++)line(i=>M[i][c]);
+    for(let r=0;r<N-1;r++)for(let c=0;c<N-1;c++){const v=M[r][c];if(v===M[r][c+1]&&v===M[r+1][c]&&v===M[r+1][c+1])p+=3;}
+    let dark=0;M.forEach(row=>row.forEach(v=>{if(v)dark++;})); p+=10*Math.floor(Math.abs(dark*100/(N*N)-50)/5); return p;};
+  let best=0,bestP=Infinity;
+  for(let m=0;m<8;m++){apply(m);fmt(m);const p=penalty();if(p<bestP){bestP=p;best=m;}apply(m);}
+  apply(best); fmt(best);
+  return {size:N,modules:M,version:ver};
+}
+/** QRコードをSVGで返す（周りに4マスの余白） */
+function qrSvg(text,px){
+  const q=makeQR(text), n=q.size+8; let d="";
+  q.modules.forEach((row,r)=>row.forEach((v,c)=>{if(v)d+=`M${c+4} ${r+4}h1v1h-1z`;}));
+  return `<svg xmlns="http:\/\/www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" width="${px||200}" height="${px||200}" shape-rendering="crispEdges" role="img" aria-label="入力フォームのQRコード"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+
+/* ---------- 配布用QRコード・掲示用ポスター ---------- */
+const fmtD=s=>{const m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${+m[2]}月${+m[3]}日`:"";};
+function qrHtml(r){
+  if(!r.formUrl) return `<p class="small">まだウェブアプリとしてデプロイされていないため、URLがありません（README.md「公開までの手順」）。</p>`;
+  let img=""; try{img=`<img id="qrImg" alt="入力フォームのQRコード" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrSvg(r.formUrl,320))}">`;}catch(e){img=`<div class="err">${esc(e.message)}</div>`;}
+  const warn=r.isCurrent&&r.open&&r.open.state!=="open"?`<div class="small" style="color:var(--warn);margin-top:6px">⚠️ 今は${r.open.state==="before"?"受付前":"受付終了"}です。QRを読んでも入力できません。</div>`:"";
+  return `<div class="qrbox">${img}<div class="u"><b>入力フォームのURL</b><br>${esc(r.formUrl)}
+      <div class="cfg" style="margin-top:8px"><button class="btn sub" id="qrCopy" type="button">URLをコピー</button><button class="btn" id="qrPoster" type="button">ポスターを印刷（A4）</button></div>
+      <label class="small" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="qrPass"> ポスターに合言葉も載せる</label>
+      <div class="small" id="qrMsg" style="margin-top:4px">合言葉は社外の人に見られないよう、LINEグループや朝礼で伝えるのがおすすめです。ポスターに載せるのは、休憩室など社員しか入らない場所に貼るときだけにしてください。</div>${warn}</div></div>
+    <div class="small" style="margin-top:8px">QRの画像は長押し（パソコンは右クリック）で保存できます。LINEグループにはURLをそのまま貼ってもOKです。</div>`;
+}
+function bindQR(r){
+  if(!$("qrCopy")) return;
+  $("qrCopy").onclick=()=>{const done=()=>$("qrMsg").textContent="✅ URLをコピーしました。LINEグループなどに貼り付けてください。";
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(r.formUrl).then(done).catch(()=>prompt("このURLをコピーしてください",r.formUrl));
+    else prompt("このURLをコピーしてください",r.formUrl);};
+  $("qrPoster").onclick=()=>printPoster(r,$("qrPass").checked);
+}
+function printPoster(r,withPass){
+  const op=r.open||{}, term=op.from||op.to?`${fmtD(op.from)||"今から"} 〜 ${fmtD(op.to)||""}${op.to?" 23:59まで":""}`:"";
+  $("poster").innerHTML=`<div class="pt">賞与査定 入力のお願い</div>
+    <div class="pp">${esc(r.period)}${term?`　｜　受付：<b>${esc(term)}</b>`:""}</div>
+    <div class="pq">${qrSvg(r.formUrl,360)}</div>
+    <div class="pu">${esc(r.formUrl)}</div>
+    <ol><li>スマホのカメラで上の<b>QRコード</b>を読み取る</li>
+      <li><b>合言葉</b>を入れる</li>
+      <li>名前の一覧から<b>自分の名前</b>を選ぶ</li>
+      <li><b>自分の店舗の人（自分も含む）</b>を、3つの項目で ★★★〜☆☆☆ の7段階で評価する<br><span style="font-size:13px">（お客様を楽しませる行動／会社の利益となる行動／働く仲間のための行動。よく分からない人は飛ばしてOK。他の店舗の人も任意）</span></li>
+      <li>最後に<b>「送信」</b>を押して完了</li></ol>
+    <div class="pk">${withPass?`合言葉：<b style="font-size:24px;letter-spacing:.06em">${esc(r.passphrase)}</b>`:"合言葉は、店長・LINEグループでお知らせします"}</div>
+    <div class="pn">・途中でやめるときは「一時保存」を押すと、<b>4桁の再開パスワード</b>が出ます。スクリーンショットなどで控えてください。<br>
+      ・<b>送信すると、あとから見ることも直すこともできません。</b>直したいときは管理者に連絡してください。<br>
+      ・入力した内容は会社（管理者）だけが確認します。ほかの従業員には見えません。<br>
+      ・「<b>ファイルを開くことができません</b>」と出たときは、<b>LINEのQRコードリーダー</b>で読み取って開いてください（Googleアカウントに2つ以上ログインしているスマホで出ることがあります）。</div>`;
+  document.body.classList.add("poster");
+  const done=()=>{document.body.classList.remove("poster");window.removeEventListener("afterprint",done);};
+  window.addEventListener("afterprint",done);
+  window.print();
+  setTimeout(done,1500);
+}
+
+function miniBar(v){
+  if(v===null||v===undefined) return `<div class="small" style="color:#9aa1ad">まだ評価がありません</div>`;
+  const on=Math.round(v)+3;
+  return `<div class="mini" title="総合 ${sgn(v)}">${LV.map((l,k)=>`<i class="${k===on?"on":""}" style="background:${l.bg}"></i>`).join("")}<b style="left:${pctOf(v)}%"></b></div>`;
+}
+
+/* ---------- 店舗別レポート（会議用） ---------- */
+let RP={store:"all",sort:"rank",data:null,busy:false};
+function openReport(){
+  S.person="__report"; $("backBtn").classList.remove("hidden"); $("hTitle").textContent="店舗別レポート";
+  loading("レポートを作っています…"); window.scrollTo(0,0);
+  api("adminStoreReport",S.period).then(r=>{RP.data=r; renderReport();}).catch(fail);
+}
+function renderReport(){
+  const r=RP.data;
+  const show=r.stores.filter(x=>RP.store==="all"||x.store===RP.store);
+  const BL=(r.bonus&&r.bonus.labels)||{};
+  const todo=[]; show.forEach(st=>st.people.forEach(p=>{if(p.n&&!p.analysis)todo.push(p.name);}));
+  let h=`<div class="noprint">
+    <div class="rp-bar">
+      <select class="in" id="rpStore"><option value="all">全店舗</option>${STORES.map(x=>`<option ${x===RP.store?"selected":""}>${esc(x)}</option>`).join("")}</select>
+      <select class="in" id="rpSort"><option value="rank" ${RP.sort==="rank"?"selected":""}>店舗内の順位順</option><option value="roster" ${RP.sort==="roster"?"selected":""}>名簿の順</option></select>
+      <button class="btn" id="rpPrint" type="button">🖨 印刷・PDF（A4横）</button>
+    </div>
+    ${r.bonus&&r.bonus.error?`<div class="small" style="color:var(--warn);margin-bottom:6px">賞与額：${esc(r.bonus.error)}</div>`:""}
+    ${r.bonus&&r.bonus.unmatched&&r.bonus.unmatched.length?`<div class="small" style="color:var(--warn);margin-bottom:6px">賞与ダッシュボードに名前が見つからない人（${r.bonus.unmatched.length}人）：${r.bonus.unmatched.map(esc).join("、")}<br>ダッシュボードの名前と名簿の名前の字を同じにすると、賞与額が出ます。</div>`:""}
+    ${todo.length?`<div class="rp-bar"><button class="btn sub" id="rpAI" type="button">AI分析がまだの ${todo.length}人 をまとめて分析</button><span class="small" id="rpAIMsg">1人20〜30秒ほどかかります。会議の前に済ませておくと、全員の欄が埋まります。</span></div>`:`<div class="small" style="margin-bottom:8px">評価のある人は全員AI分析済みです。</div>`}
+  </div>`;
+  h+=`<div class="rep">`;
+  show.forEach(st=>{
+    const ppl=st.people.slice().sort(RP.sort==="rank"?((a,b)=>(a.rank||999)-(b.rank||999)||a.order-b.order):((a,b)=>a.order-b.order));
+    h+=`<div class="sec rp-store"><div class="rp-head"><h3>${esc(st.store)}</h3><span class="small">${esc(r.period)}｜評価のある人 ${st.count}/${st.people.length}人｜店舗平均 ${sgn(st.overall)}（${st.overall===null?"－":pts100(st.overall)+"点"}）</span></div>
+      <div class="rp-wrap"><table class="rp"><thead><tr><th>順位</th><th>氏名・役職</th><th>評価<br>人数</th>${SHORT.map(x=>`<th>${x}</th>`).join("")}<th>総合<br>（100点）</th><th>自己<br>評価</th><th>最終<br>評価</th><th>今回賞与<br>${esc(BL.cur||"")}</th><th>前回比<br>${esc(BL.prev?"（"+BL.prev+"）":"")}</th><th class="w">AIの評価（強み・課題）</th><th class="w">今後の指導方針（AIのアドバイス）</th></tr></thead><tbody>`;
+    ppl.forEach(p=>{
+      const a=p.analysis, sv=p.self?avg3(p.self):null;
+      const aiCell=!p.n?`<span class="small">評価なし</span>`:!a?`<span class="small">AI未分析</span>`:
+        `${esc(a.overall)}${a.good.length?`<div style="margin-top:4px">${a.good.slice(0,2).map(x=>`<div><span class="tag g">強み</span>${esc(x)}</div>`).join("")}</div>`:""}${a.bad.length?`<div style="margin-top:2px">${a.bad.slice(0,2).map(x=>`<div><span class="tag b">課題</span>${esc(x)}</div>`).join("")}</div>`:""}`;
+      const advCell=!a?"":`<ul>${a.advice.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+      const fin=p.final?`<b>${esc(p.final.rank)}</b>${p.final.note?`<div class="small">${esc(p.final.note)}</div>`:""}`:`<span class="small">－</span>`;
+      h+=`<tr class="${p.n?"":"none"}"><td class="num">${p.rank?p.rank+"位":"－"}</td><td class="nm"><b>${esc(p.name)}</b><div class="small">${esc(p.role||"")}</div></td>
+        <td class="num">${p.n}人</td>${[0,1,2].map(i=>`<td class="num">${sgn(p.avg[i])}</td>`).join("")}
+        <td class="num"><b>${sgn(p.overall)}</b><div class="small">${p.overall===null?"":pts100(p.overall)+"点"}</div></td>
+        <td class="num">${sv===null?"－":sgn(sv)}</td><td>${fin}</td>${bonusCells(p.bonus,BL)}<td class="ai">${aiCell}</td><td class="adv">${advCell}</td></tr>`;
+    });
+    h+=`</tbody></table></div></div>`;
+  });
+  h+=`</div>`;
+  $("app").innerHTML=h;
+  $("rpStore").onchange=()=>{RP.store=$("rpStore").value; renderReport();};
+  $("rpSort").onchange=()=>{RP.sort=$("rpSort").value; renderReport();};
+  $("rpPrint").onclick=()=>window.print();
+  if($("rpAI")) $("rpAI").onclick=()=>analyzeMany(todo);
+}
+/** 賞与の2列：今回の金額／前回からの増減（額・率）と前回・前年同期の金額 */
+const yen=v=>v===null||v===undefined?"":Math.round(v).toLocaleString("ja-JP")+"円";
+function bonusCells(b,BL){
+  if(!b) return `<td class="num"><span class="small">－</span></td><td class="num"><span class="small">－</span></td>`;
+  const cur=b.cur, prev=b.prev;
+  const curCell=cur===null?`<span class="small">未入力</span>`:`<b>${yen(cur)}</b>`;
+  let diff=`<span class="small">－</span>`;
+  if(cur!==null&&prev!==null){
+    const d=cur-prev, pc=prev?Math.round(d/prev*1000)/10:null;
+    const col=d>0?"var(--ok)":d<0?"var(--warn)":"var(--sub)";
+    diff=`<b style="color:${col}">${d>0?"+":d<0?"−":"±"}${Math.abs(d).toLocaleString("ja-JP")}円</b>${pc===null?"":`<div style="color:${col}">（${d>0?"+":""}${pc}%）</div>`}`;
+  }
+  const ref=`<div class="small">前回 ${prev===null?"なし":yen(prev)}</div><div class="small">前年同期${BL.yoy?"（"+esc(BL.yoy)+"）":""} ${b.yoy===null?"なし":yen(b.yoy)}</div>`;
+  return `<td class="num">${curCell}</td><td class="num">${diff}${ref}</td>`;
+}
+/** AI分析を1人ずつ順番に実行（サーバーの時間制限に引っかからないよう、まとめて投げない） */
+function analyzeMany(names){
+  if(RP.busy) return; RP.busy=true;
+  const b=$("rpAI"); b.disabled=true;
+  let i=0, ng=[];
+  const next=()=>{
+    if(i>=names.length){ RP.busy=false; openReport(); return; }
+    const nm=names[i];
+    if($("rpAIMsg")) $("rpAIMsg").innerHTML=`<span class="spin s"></span>分析中 ${i+1}/${names.length}：${esc(nm)}（画面を閉じないでください）`;
+    api("adminAnalyze",RP.data.period,nm).then(()=>{i++;next();}).catch(e=>{ng.push(nm+"："+(e.message||e)); i++; next();});
+  };
+  next();
+}
+
+/* ---------- 評価バロメーター ---------- */
+// 7段階（★★★〜☆☆☆）の色。黒星は濃い灰色、白星は金色（入力フォームの星と同じ考え方）
+const LV=[{t:"★★★",bg:"#3a3f4b",fg:"#fff"},{t:"★★",bg:"#6b7180",fg:"#fff"},{t:"★",bg:"#aeb3bd",fg:"#2b2f38"},
+  {t:"－",bg:"#e3e6ec",fg:"#6b7385"},{t:"☆",bg:"#f5dc84",fg:"#6b5200"},{t:"☆☆",bg:"#e8bd2c",fg:"#4a3800"},{t:"☆☆☆",bg:"#c99a06",fg:"#fff"}];
+const lvOf=v=>LV[Math.max(0,Math.min(6,Math.round(v)+3))];
+function wordOf(v){
+  if(v===null||v===undefined) return {t:"評価なし",bg:"#eef0f4",fg:"#9aa1ad"};
+  const w=v>=2?"とても高い評価":v>=1?"高い評価":v>=.3?"やや高い評価":v>-.3?"ふつう":v>-1?"やや低い評価":v>-2?"低い評価":"とても低い評価";
+  const l=lvOf(v); return {t:w,bg:l.bg,fg:l.fg};
+}
+const pctOf=v=>(v+3)/6*100;
+// 目盛りの両端では、文字がはみ出さないように内側へ寄せる（印は位置どおり）
+const edge=x=>x>88?"transform:translateX(calc(-100% + 5px))":x<12?"transform:translateX(-5px)":"";
+const avg3=a=>a?Math.round((a[0]+a[1]+a[2])/3*100)/100:null;
+
+function baroHtml(p){
+  const b=p.bench||{}, selfO=avg3(p.self);
+  let h=`<div class="bv-top"><div class="bv-gauge">${gaugeSvg(p.overall,b.storeOverall,selfO)}
+      ${(()=>{const w=wordOf(p.overall);return `<span class="bv-word" style="background:${w.bg};color:${w.fg}">${w.t}</span>`})()}</div>
+    <div class="bv-radar">${radarSvg(p.avg,b.storeAvg,p.self)}</div></div>`;
+  ITEMS.forEach((it,i)=>{
+    const v=p.avg[i], on=v===null?-1:Math.round(v)+3, sv=p.self?p.self[i]:null, av=b.storeAvg?b.storeAvg[i]:null;
+    const d=p.dist[i], tot=d.reduce((a,c)=>a+c,0);
+    const good=d[4]+d[5]+d[6], bad=d[0]+d[1]+d[2];
+    h+=`<div class="bv-item"><div class="bv-hd"><span class="nm"><span style="color:${ICOL[i]}">●</span> ${esc(it)}</span>
+        ${v===null?`<span class="small">評価なし</span>`:`<span class="st2" style="color:${lvOf(v).bg==="#e3e6ec"?"#6b7385":lvOf(v).bg}">${lvOf(v).t}</span><span class="v">${sgn(v)}</span><small>${pts100(v)}点</small>`}</div>
+      <div class="bv-scale">${LV.map((l,k)=>`<div class="c ${k===on?"on":""}" style="background:${l.bg};color:${l.fg}">${l.t}</div>`).join("")}
+        ${sv!==null?`<div class="me" style="left:${pctOf(sv)}%;${edge(pctOf(sv))}">${pctOf(sv)>88?`本人 ${sv>0?"+":""}${sv}▼`:`▼本人 ${sv>0?"+":""}${sv}`}</div>`:""}
+        ${v!==null?`<div class="dot" style="left:${pctOf(v)}%"></div>`:""}
+        ${av!==null&&av!==undefined?`<div class="av" style="left:${pctOf(av)}%;${edge(pctOf(av))}">店舗平均</div>`:""}</div>
+      ${tot?`<div class="bv-dist">${d.map((c,k)=>c?`<span style="flex:${c};background:${LV[k].bg};color:${LV[k].fg}" title="${LV[k].t}：${c}人">${c}</span>`:"").join("")}</div>
+        <div class="bv-sum"><span>★ 悪い評価 ${bad}人</span><span>－ ${d[3]}人</span><span>☆ 良い評価 ${good}人</span></div>`:""}
+    </div>`;
+  });
+  h+=`<div class="legend" style="margin-top:6px"><span><b style="color:var(--navy)">●</b> 本人（他者評価の平均）</span><span><span style="color:var(--c1)">▼</span> 自己評価</span><span>｜店舗平均</span><span>帯：つけた人数（★★★〜☆☆☆）</span></div>`;
+  return h;
+}
+
+// 総合のメーター（半円）。−3〜+3 を左から右へ。針＝本人、▲＝店舗平均、▼＝自己評価
+function gaugeSvg(v,avg,self){
+  const W=260,H=192,cx=130,cy=122,R=100,w=24;
+  const ang=x=>Math.PI*(1-(x+3)/6); // −3→180°, +3→0°
+  const pt=(x,r)=>[cx+r*Math.cos(ang(x)),cy-r*Math.sin(ang(x))];
+  const arc=(a,b2,r)=>{const [x1,y1]=pt(a,r),[x2,y2]=pt(b2,r);return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;};
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="総合 ${sgn(v)}">`;
+  LV.forEach((l,k)=>{const a=-3+k*6/7+.03,b2=-3+(k+1)*6/7-.03;g+=`<path d="${arc(a,b2,R)}" stroke="${l.bg}" stroke-width="${w}" fill="none"/>`;});
+  g+=`<text x="${pt(-3,R)[0]}" y="${cy+16}" font-size="10" fill="#9aa1ad" text-anchor="middle">★★★ −3</text><text x="${pt(3,R)[0]}" y="${cy+16}" font-size="10" fill="#9aa1ad" text-anchor="middle">+3 ☆☆☆</text>`;
+  const mark=(x,txt,col,out)=>{if(x===null||x===undefined)return"";const r=out?R+w/2+3:R-w/2-3,[mx,my]=pt(x,r),[lx,ly]=pt(x,out?R+w/2+14:R-w/2-14);
+    const rot=90-ang(x)*180/Math.PI+(out?180:0);
+    return `<path d="M0 0 L-6 -9 L6 -9 Z" fill="${col}" transform="translate(${mx.toFixed(1)} ${my.toFixed(1)}) rotate(${rot.toFixed(1)})"/><text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" font-size="9" fill="${col}" text-anchor="middle" font-weight="700">${txt}</text>`;};
+  g+=mark(avg,"店舗平均","#6b7385",false)+mark(self,"本人","#2f6fd0",true);
+  if(v!==null&&v!==undefined){
+    const [nx,ny]=pt(v,R-w/2-8);
+    g+=`<line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#1d2a44" stroke-width="4" stroke-linecap="round"/>`;
+  }
+  g+=`<circle cx="${cx}" cy="${cy}" r="8" fill="#1d2a44"/>
+    <text x="${cx}" y="${cy+44}" font-size="32" font-weight="800" fill="#1d2a44" text-anchor="middle">${v===null||v===undefined?"－":pts100(v)}<tspan font-size="12" font-weight="700" dx="2">点</tspan></text>
+    <text x="${cx}" y="${cy+62}" font-size="10" fill="#6b7385" text-anchor="middle">100点換算（総合 ${sgn(v)}）</text></svg>`;
+  return g;
+}
+
+// 3項目のバランス（三角形のレーダー）。中心が−3、外側が+3
+function radarSvg(a,avg,self){
+  const W=260,H=200,cx=130,cy=112,R=78;
+  const angs=[-90,30,150].map(d=>d*Math.PI/180);
+  const pt=(i,v)=>{const r=R*((v===null||v===undefined?-3:v)+3)/6;return [cx+r*Math.cos(angs[i]),cy+r*Math.sin(angs[i])];};
+  const poly=(vals,stroke,fill,dash,wd)=>vals?`<polygon points="${[0,1,2].map(i=>pt(i,vals[i]).map(n=>n.toFixed(1)).join(",")).join(" ")}" fill="${fill}" stroke="${stroke}" stroke-width="${wd||2}" ${dash?`stroke-dasharray="${dash}"`:""} stroke-linejoin="round"/>`:"";
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="3項目のバランス">`;
+  [-3,-1.5,0,1.5,3].forEach(v=>g+=poly([v,v,v],v===0?"#b7bcc7":"#e3e6ec","none",v===0?"3 3":"",1));
+  [0,1,2].forEach(i=>{const [x,y]=pt(i,3);g+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e3e6ec"/>`;});
+  g+=poly(avg,"#9aa1ad","none","4 3",1.5);
+  g+=poly(self,"#2f6fd0","none","2 3",1.8);
+  g+=poly(a,"#1d2a44","rgba(201,154,6,.28)","",2.4);
+  if(a) [0,1,2].forEach(i=>{const [x,y]=pt(i,a[i]);g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${ICOLHEX[i]}" stroke="#fff" stroke-width="1.5"/>`;});
+  const lab=[[cx,cy-R-10,"middle"],[cx+R*Math.cos(angs[1])+4,cy+R*Math.sin(angs[1])+18,"middle"],[cx+R*Math.cos(angs[2])-4,cy+R*Math.sin(angs[2])+18,"middle"]];
+  [0,1,2].forEach(i=>g+=`<text x="${lab[i][0].toFixed(1)}" y="${lab[i][1].toFixed(1)}" font-size="11" font-weight="700" fill="${ICOLHEX[i]}" text-anchor="${lab[i][2]}">${SHORT[i]} ${a?sgn(a[i]):""}</text>`);
+  g+=`</svg><div class="legend" style="justify-content:center"><span><i style="background:rgba(201,154,6,.5);border:1px solid #1d2a44"></i>本人</span><span><i style="border:1px dashed #9aa1ad"></i>店舗平均</span>${self?`<span><i style="border:1px dotted #2f6fd0"></i>自己評価</span>`:""}</div>`;
+  return g;
+}
+
+function posHtml(p){
+  const b=p.bench, sp=p.split;
+  if(!b||!p.n) return `<p class="small">この査定期の他者評価がありません</p>`;
+  const df=(a,c)=>a===null||c===null||c===undefined?"":(()=>{const d=a-c;return d>0.004?`<span class="up">▲${d.toFixed(2)}</span>`:d<-0.004?`<span class="dn">▼${(-d).toFixed(2)}</span>`:""})();
+  const row=(lb,a,o,n,cls)=>`<tr><td class="${cls||""}">${lb}${n!==undefined?`<span class="small">（${n}人）</span>`:""}</td>${[0,1,2].map(i=>`<td class="${cls||""}">${sgn(a[i])}</td>`).join("")}<td class="${cls||""}">${sgn(o)}</td></tr>`;
+  let t=`<div style="overflow-x:auto"><table class="pos"><tr><th></th>${SHORT.map(s=>`<th>${s}</th>`).join("")}<th>総合</th></tr>`;
+  t+=row("本人（他者評価）",p.avg,p.overall,p.n,"me");
+  t+=row(`${esc(p.store)}の平均`,b.storeAvg,b.storeOverall);
+  t+=row("全体の平均",b.allAvg,b.allOverall);
+  t+=`<tr><td>店舗平均との差</td>${[0,1,2].map(i=>`<td>${df(p.avg[i],b.storeAvg[i])||"±0"}</td>`).join("")}<td>${df(p.overall,b.storeOverall)||"±0"}</td></tr>`;
+  t+=`<tr><td colspan="5" class="small" style="text-align:left;padding-top:10px">評価の内訳（誰からの評価か）</td></tr>`;
+  if(sp.own.n) t+=row("自店舗の人から",sp.own.avg,sp.own.overall,sp.own.n);
+  if(sp.other.n) t+=row("他店舗の人から",sp.other.avg,sp.other.overall,sp.other.n);
+  if(p.self) t+=row("本人の自己評価",p.self,Math.round((p.self[0]+p.self[1]+p.self[2])/3*100)/100);
+  t+=`</table></div>`;
+  const vs="";
+  const rk=b.rank?`<div style="margin-top:8px">店舗内の順位（総合）：<b>${b.rank}位</b>／${b.count}人中</div>`:"";
+  const note=sp.own.n&&sp.other.n&&Math.abs(sp.own.overall-sp.other.overall)>=1?`<div class="small" style="margin-top:4px">⚠️ 自店舗からと他店舗からの評価に1以上の差があります</div>`:"";
+  return t+vs+rk+note;
+}
+
+function finHtml(p){
+  const f=p.final;
+  const ranks=p.ranks||["S","A","B","C","D"];
+  return `<h3>最終評価（管理者）<span class="sub">${f?`${esc(f.by)}｜${esc(f.at)}`:"未記入"}</span></h3>
+    <p class="small noprint">点数・AI分析・面談の内容をふまえて、ランクと所見を記入します。一覧と「最終評価」「集計」シートに反映されます。</p>
+    ${f?`<div style="margin:6px 0"><span class="rank lg">${esc(f.rank)}</span></div>${f.note?`<div style="white-space:pre-wrap;margin-bottom:8px">${esc(f.note)}</div>`:""}`:""}
+    <label class="f">ランク</label>
+    <div class="rk" id="rkSel">${ranks.map(r=>`<button type="button" data-r="${esc(r)}" class="${f&&f.rank===r?"on":""}">${esc(r)}</button>`).join("")}</div>
+    <label class="f">所見（任意）</label>
+    <textarea class="in" id="finNote" style="min-height:80px" placeholder="例）お客様対応は店舗内でも上位。新人指導の約束が守られているかを次回確認。">${esc(f?f.note:"")}</textarea>
+    <div class="cfg" style="margin-top:10px"><button class="btn" id="finBtn" type="button">保存する</button>
+      ${f?`<button class="btn sub" id="finClr" type="button">取り消す</button>`:""}</div><div class="err" id="finErr"></div>`;
+}
+function bindFin(){
+  let sel=S.p.final?S.p.final.rank:"";
+  document.querySelectorAll("#rkSel button").forEach(b=>b.onclick=()=>{sel=b.dataset.r;
+    document.querySelectorAll("#rkSel button").forEach(x=>x.classList.toggle("on",x===b));});
+  const save=(rank)=>{
+    if(rank===null){ if(!sel){$("finErr").textContent="ランクを選んでください";return;} rank=sel; }
+    const b=$("finBtn"); b.disabled=true;
+    api("adminSaveFinal",{period:S.period,name:S.p.name,rank,note:$("finNote").value}).then(f=>{
+      S.p.final=f; if(S.overview){const x=S.overview.people.find(q=>q.name===S.p.name); if(x) x.rank=f?f.rank:"";}
+      renderPerson(S.p); const el=$("finSec"); if(el) el.scrollIntoView({block:"center"});
+    }).catch(e=>{b.disabled=false;$("finErr").textContent=e.message||e;});
+  };
+  $("finBtn").onclick=()=>save(null);
+  if($("finClr")) $("finClr").onclick=()=>{if(confirm("最終評価を取り消します。よろしいですか？")) save("");};
+}
+function printKarte(){
+  const ds=[...document.querySelectorAll("#app details")], was=ds.map(d=>d.open);
+  ds.forEach(d=>d.open=true);
+  window.print();
+  ds.forEach((d,i)=>d.open=was[i]);
+}
+
+function historyHtml(p){
+  const hs=p.history;
+  if(!hs.length) return `<p class="small">データがありません</p>`;
+  // 折れ線グラフ
+  const W=340,H=170,L=30,R=10,T=12,B=26, n=hs.length;
+  const x=i=>n===1?(L+W-R)/2:L+(W-L-R)*i/(n-1);
+  const y=v=>T+(H-T-B)*(3-v)/6;
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:560px;display:block;margin:0 auto">`;
+  for(let v=-3;v<=3;v++) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?"#b7bcc7":"#eef0f4"}" stroke-width="${v===0?1.2:1}"/><text x="${L-6}" y="${y(v)+3}" font-size="9" fill="#9aa1ad" text-anchor="end">${v>0?"+":""}${v}</text>`;
+  hs.forEach((h,i)=>g+=`<text x="${x(i)}" y="${H-8}" font-size="9" fill="#6b7385" text-anchor="middle">${esc(h.period)}</text>`);
+  const line=(vals,col,w)=>{
+    const pts=vals.map((v,i)=>v===null?null:[x(i),y(v)]).filter(Boolean);
+    if(!pts.length) return "";
+    return (pts.length>1?`<polyline fill="none" stroke="${col}" stroke-width="${w}" points="${pts.map(p=>p.join(",")).join(" ")}"/>`:"")+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${w+1}" fill="${col}"/>`).join("");
+  };
+  [0,1,2].forEach(i=>g+=line(hs.map(h=>h.avg[i]),ICOLHEX[i],1.6));
+  g+=line(hs.map(h=>h.overall),"#1d2a44",2.6);
+  g+=`</svg>`;
+  const leg=`<div class="legend" style="justify-content:center;margin:4px 0 10px">${SHORT.map((s,i)=>`<span><i style="background:${ICOLHEX[i]}"></i>${s}</span>`).join("")}<span><i style="background:#1d2a44"></i>総合</span></div>`;
+  // 表（前回比）
+  const df=(a,b)=>a===null||b===null||b===undefined?"":(()=>{const d=a-b;return d>0.004?` <span class="up">▲${d.toFixed(2)}</span>`:d<-0.004?` <span class="dn">▼${(-d).toFixed(2)}</span>`:` <span class="small">±0</span>`})();
+  let t=`<table><tr><th>査定期</th>${SHORT.map(s=>`<th>${s}</th>`).join("")}<th>総合</th><th>人数</th></tr>`;
+  hs.forEach((h,i)=>{const pv=hs[i-1];
+    t+=`<tr><td>${esc(h.period)}</td>${[0,1,2].map(k=>`<td>${sgn(h.avg[k])}${pv?df(h.avg[k],pv.avg[k]):""}</td>`).join("")}<td><b>${sgn(h.overall)}</b>${pv?df(h.overall,pv.overall):""}</td><td>${h.n}</td></tr>`;});
+  t+=`</table>`;
+  return g+leg+`<div style="overflow-x:auto">${t}</div>`;
+}
+
+function commentsHtml(p){
+  if(!p.comments.length) return `<p class="small">コメントはありません</p>`;
+  return ITEMS.map((it,i)=>{
+    const cs=p.comments.filter(c=>c.item===i).sort((a,b)=>b.v-a.v);
+    return `<details ${i===0?"open":""}><summary><span style="color:${ICOL[i]}">●</span> ${esc(it)}（${cs.length}件）</summary>${
+      cs.map(c=>`<div class="cm"><div class="st ${c.v>0?"p":c.v<0?"n":"z"}">${stars(c.v)}</div><div>${esc(c.text)}<div class="by">${esc(c.by)}（${esc(c.byStore)}）${c.self?"｜本人":""}</div></div></div>`).join("")||`<div class="small" style="padding-bottom:8px">なし</div>`
+    }</details>`;
+  }).join("");
+}
+
+function ivHtml(p){
+  const today=new Date(); const d=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  let h=`<h3>面談記録</h3>
+    <div class="two"><div><label class="f">面談日</label><input class="in" type="date" id="ivDate" value="${d}"></div>
+    <div><label class="f">面談者</label><input class="in" id="ivBy" value="${esc(lsGet("ivBy")||"")}" placeholder="例：竹澤"></div></div>
+    <label class="f">面談メモ（そのまま貼り付けでOK。話し言葉・箇条書きでも構いません）</label>
+    <textarea class="in" id="ivText" placeholder="例）お客様への声かけは良くできている。一方で忙しい時間帯の呼び出し対応が遅いという声があるので、ランプが点いたら手を止めて向かうように伝えた。本人からは、来月までに新人2人にカウンター業務を教えると話があった。"></textarea>
+    <div style="margin-top:10px"><button class="btn" id="ivBtn" type="button">AIで要約して保存</button><div class="err" id="ivErr"></div></div>`;
+  const list=(p.interviews||[]).slice().reverse();
+  h+=list.length?list.map(iv=>`<div class="iv">
+      <div class="hd"><b>${esc(iv.period)}</b><span>${esc(iv.date)}</span><span>面談者：${esc(iv.interviewer||"－")}</span></div>
+      <div style="margin:6px 0">${esc(iv.summary)}</div>
+      ${iv.guidance.length?`<div class="h4">指導した内容</div><ul>${iv.guidance.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+      ${iv.commitments.length?`<div class="h4">本人の約束・目標</div><ul>${iv.commitments.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+      ${iv.next_check.length?`<div class="h4">次回確認すること</div><ul>${iv.next_check.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+      <details><summary class="small">面談メモ（原文）</summary><div style="white-space:pre-wrap;font-size:13px;padding-bottom:6px">${esc(iv.raw)}</div></details>
+    </div>`).join(""):`<p class="small" style="margin-top:12px">まだ記録はありません</p>`;
+  return h;
+}
+function bindIV(){
+  $("ivBtn").onclick=()=>{
+    const text=$("ivText").value.trim(); if(!text){$("ivErr").textContent="面談メモを入力してください";return;}
+    const b=$("ivBtn"); b.disabled=true; b.innerHTML=`<span class="spin s"></span>要約中…`;
+    lsSet("ivBy",$("ivBy").value);
+    api("adminSaveInterview",{period:S.period,name:S.p.name,date:$("ivDate").value.replace(/-/g,"/"),interviewer:$("ivBy").value,text})
+      .then(rec=>{S.p.interviews=(S.p.interviews||[]).concat([rec]); $("ivSec").innerHTML=ivHtml(S.p); bindIV();})
+      .catch(e=>{b.disabled=false;b.textContent="AIで要約して保存";$("ivErr").textContent=e.message||e;});
+  };
+}
+
+/* ============================================================
+   デモデータ（GASでは使われません）
+   ============================================================ */
+const DEMO=(()=>{
+  if(isGAS) return null;
+  let seed=7; const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const roles=["店長","副店長","主任","主任","リーダー","リーダー","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ"];
+  const members={};
+  STORES.forEach((s,si)=>{const pre=s==="総務・サービス部"?"総務":s; const n=si===3?8:15;
+    members[s]=Array.from({length:n},(_,i)=>({name:`${pre}スタッフ${String(i+1).padStart(2,"0")}`,role:si===3&&i===0?"部長":roles[i]}));});
+  const periods=["2025年冬季","2026年夏季","2026年冬季"];
+  const POOL=[
+    {p:["いつも笑顔でお客様にご挨拶している姿勢が見受けられ、とても良い","常連様の名前を覚えていて声かけが自然","イベント日の呼び込みが明るく店内の雰囲気が良くなる","台トラブルの時もお客様に丁寧に説明してくれる"],
+     n:["忙しい時間帯に表情が硬くなり、呼び出しランプへの対応が遅れることがある","クレーム対応の時に言葉遣いがやや強く感じる"]},
+    {p:["台の稼働をよく見ていてシマの配置替えを提案してくれた","景品の在庫管理が丁寧でロスが減った","電気の消し忘れなど細かいコストに気を配っている"],
+     n:["発注のミスが何度かあった","閉店作業に時間がかかり残業が増えている"]},
+    {p:["新人に丁寧に仕事を教えている","シフトの急な変更にも快く対応してくれる","忙しい時に率先して休憩の声かけをしてくれて助かる"],
+     n:["指示が感覚的で、新人が戸惑う場面がある","報告・連絡が遅れることがある"]}
+  ];
+  const resp=[]; // {period,by,byStore,name,r:[...],c:[...]}
+  periods.forEach((per,pi)=>STORES.forEach(s=>{
+    const ms=members[s];
+    ms.forEach((ev,ei)=>ms.forEach((tg,ti)=>{
+      if(pi<2&&rnd()<.15) return;
+      const base=[(ti*37%7-2.5)/2,(ti*53%7-2.8)/2,(ti*29%7-2.2)/2].map(b=>b+pi*(ti%3===0?.45:ti%3===1?-.2:.15));
+      const r=base.map(b=>Math.max(-3,Math.min(3,Math.round(b+(rnd()-.5)*2.2+(ev.name===tg.name?.6:0)))));
+      const c=r.map((v,i)=>{if(rnd()>.4||v===0)return"";const pool=v>0?POOL[i].p:POOL[i].n;return pool[Math.floor(rnd()*pool.length)];});
+      resp.push({period:per,by:ev.name,byStore:s,name:tg.name,r,c});
+    }));
+  }));
+  // 他店舗の人からの評価（任意入力なので一部だけ）
+  periods.forEach(per=>STORES.forEach(s=>members[s].forEach(ev=>{
+    if(rnd()>.25) return;
+    STORES.filter(o=>o!==s).forEach(o=>members[o].forEach(tg=>{
+      if(rnd()>.3) return;
+      const r=[0,1,2].map(()=>Math.max(-3,Math.min(3,Math.round((rnd()-.35)*4))));
+      resp.push({period:per,by:ev.name,byStore:s,name:tg.name,r,c:["","",""]});
+    }));
+  })));
+  const finals={}; // period|name → {rank,note,by,at}
+  let users=[{email:"hirota@example.com",name:"（デモ）廣田",role:"閲覧者",at:"2026/11/14 10:00",last:""}];
+  const ai={}; const ivs=[]; let pass="genesis", opFrom="2026-11-14", opTo="2026-11-30";
+  const opState=()=>{const t=new Date(),f=opFrom?new Date(opFrom+"T00:00:00"):null,e=opTo?new Date(opTo+"T23:59:59"):null;
+    return{state:f&&t<f?"before":e&&t>e?"after":"open",from:opFrom,to:opTo}};
+  const lock={}; // 今期の入力状況（デモ）
+  members["ゴッサム"].forEach((m,i)=>lock[m.name]={state:i<9?"提出済":i<11?"入力中":"未提出",at:i<11?"2026/11/14 10:"+String(10+i).padStart(2,"0"):""});
+  STORES.filter(s=>s!=="ゴッサム").forEach(s=>members[s].forEach((m,i)=>lock[m.name]={state:i%3?"提出済":"未提出",at:i%3?"2026/11/13 18:20":""}));
+  ivs.push({period:"2026年夏季",name:"ゴッサムスタッフ01",store:"ゴッサム",date:"2026/07/18",interviewer:"竹澤",
+    raw:"お客様対応は全体的に良い。ただ、新人への指示が感覚的だという声が複数あるので、手順を紙にまとめて渡すように伝えた。本人からは、次の査定までにカウンター業務のマニュアルを作ると話があった。",
+    summary:"お客様対応は良好。新人への指示が感覚的との声を受け、手順の見える化を指導した。",
+    guidance:["新人への指示は手順を紙にまとめて渡す"],commitments:["次の査定までにカウンター業務のマニュアルを作る"],next_check:["マニュアルが完成し、新人に使われているか"],at:"2026/07/18 15:20"});
+  const storeOf=n=>STORES.find(s=>members[s].some(m=>m.name===n));
+  const roleOf=n=>(members[storeOf(n)]||[]).find(m=>m.name===n)?.role||"";
+  const r2=v=>Math.round(v*100)/100;
+  function score(rows,name){
+    const o=rows.filter(r=>r.by!==name), self=rows.find(r=>r.by===name), n=o.length;
+    const avg=[0,1,2].map(i=>n?r2(o.reduce((a,r)=>a+r.r[i],0)/n):null);
+    const dist=[0,1,2].map(i=>{const d=[0,0,0,0,0,0,0];o.forEach(r=>d[r.r[i]+3]++);return d});
+    return {n,avg,dist,overall:n?r2((avg[0]+avg[1]+avg[2])/3):null,self:self?self.r.slice():null};
+  }
+  function person(period,name){
+    const all=resp.filter(r=>r.name===name), cur=all.filter(r=>r.period===period), sc=score(cur,name);
+    const comments=[]; cur.forEach(r=>r.c.forEach((t,i)=>{if(t)comments.push({by:r.by,byStore:r.byStore,self:r.by===name,item:i,v:r.r[i],text:t})}));
+    const history=periods.map(p=>{const s=score(all.filter(r=>r.period===p),name);return{period:p,n:s.n,avg:s.avg,overall:s.overall,self:s.self}}).filter(h=>h.n>0);
+    const a=ai[period+"|"+name], st=storeOf(name);
+    const others=cur.filter(r=>r.by!==name);
+    const part=rs=>{const x=score(rs,name);return{n:x.n,avg:x.avg,overall:x.overall}};
+    return {period,name,store:st,role:roleOf(name),...sc,comments,history,analysis:a?a.a:null,analyzedAt:a?a.at:"",interviews:ivs.filter(v=>v.name===name),
+      bench:bench(period,name,st),split:{own:part(others.filter(r=>r.byStore===st)),other:part(others.filter(r=>r.byStore!==st))},
+      final:finals[period+"|"+name]||null,ranks:["S","A","B","C","D"],
+      status:Object.assign({state:"未提出",at:""},lock[name]),isCurrent:period===periods[2]};
+  }
+  function bench(period,name,store){
+    const rows=resp.filter(r=>r.period===period), all=[];
+    STORES.forEach(st=>members[st].forEach(m=>{const sc=score(rows.filter(r=>r.name===m.name),m.name);if(sc.n)all.push({store:st,name:m.name,avg:sc.avg,overall:sc.overall})}));
+    const mean=(l,f)=>l.length?r2(l.reduce((a,x)=>a+f(x),0)/l.length):null;
+    const mine=all.filter(x=>x.store===store), me=mine.find(x=>x.name===name);
+    return {storeAvg:[0,1,2].map(i=>mean(mine,x=>x.avg[i])),storeOverall:mean(mine,x=>x.overall),
+      allAvg:[0,1,2].map(i=>mean(all,x=>x.avg[i])),allOverall:mean(all,x=>x.overall),
+      rank:me?mine.filter(x=>x.overall>me.overall).length+1:null,count:mine.length};
+  }
+  function fakeAnalysis(p){
+    const pick=(arr)=>{const seen=new Set();return arr.filter(c=>{const k=c.item+c.text;if(seen.has(k))return false;seen.add(k);return true}).slice(0,3)};
+    const good=pick(p.comments.filter(c=>c.v>0&&!c.self).sort((a,b)=>b.v-a.v)).map(c=>({item:SHORT[c.item],point:c.text.replace(/。$/,""),quote:c.text,by:c.by}));
+    const bad=pick(p.comments.filter(c=>c.v<0&&!c.self).sort((a,b)=>a.v-b.v)).map(c=>({item:SHORT[c.item],point:c.text.replace(/。$/,""),quote:c.text,by:c.by}));
+    const lo=[0,1,2].sort((a,b)=>p.avg[a]-p.avg[b])[0], hi=[0,1,2].sort((a,b)=>p.avg[b]-p.avg[a])[0];
+    const prev=p.history.length>1?p.history[p.history.length-2]:null;
+    const iv=p.interviews.filter(v=>v.period!==p.period).slice(-1)[0];
+    const ADV=[["忙しい時間帯こそ、呼び出しランプへの対応を最優先にする","お客様一人ひとりに一言添える声かけを習慣にする","クレーム時は結論より先にお詫びと共感を伝える"],
+      ["発注前にダブルチェックの手順を決めて守る","閉店作業の手順を見直し、所要時間を計って短縮する","気づいたコスト削減のアイデアを月1回は上司に提案する"],
+      ["指示は「何を・いつまでに・どうやって」をセットで伝える","報告・連絡は気づいたその場で、短くても先に入れる","新人の困りごとを週1回は自分から聞きに行く"]];
+    return {
+      overall:`総合は${sgn(p.overall)}（100点換算 ${pts100(p.overall)}点）。「${ITEMS[hi]}」の評価が最も高く、「${ITEMS[lo]}」が相対的に低い結果です。${prev?`前回（${sgn(prev.overall)}）から${p.overall>=prev.overall?"上がって":"下がって"}います。`:""}`,
+      good,bad,
+      gap:p.self?`本人の自己評価（総合 ${sgn((p.self[0]+p.self[1]+p.self[2])/3)}）は、周りからの評価（${sgn(p.overall)}）より${(p.self[0]+p.self[1]+p.self[2])/3>p.overall?"高め":"低め"}です。`:"",
+      followup:iv?`前回「${iv.guidance[0]}」と指導しました。今回「${ITEMS[2]}」は ${sgn(prev&&prev.avg[2])} → ${sgn(p.avg[2])} で、${p.avg[2]>=(prev?prev.avg[2]:0)?"改善が見られます":"まだ改善が見られません"}。`:"",
+      position:p.bench&&p.bench.rank?`総合は店舗平均（${sgn(p.bench.storeOverall)}）より${p.overall>=p.bench.storeOverall?"高く":"低く"}、店舗内で${p.bench.rank}位／${p.bench.count}人です。${p.split.other.n?`他店舗の人からの評価（${sgn(p.split.other.overall)}）は自店舗から（${sgn(p.split.own.overall)}）より${p.split.other.overall>=p.split.own.overall?"高め":"低め"}です。`:""}`:"",
+      advice:ADV[lo],
+      interview_points:[`「${ITEMS[lo]}」で、自分で気になっている場面はありますか？`,`周りから評価されている「${ITEMS[hi]}」で意識していることは何ですか？`,"次の査定までに、ひとつ変えるとしたら何にしますか？"]
+    };
+  }
+  return {
+    adminLogin:(email,pw)=>{email=String(email||"").trim().toLowerCase(); if(!email||!pw) throw new Error("メールアドレスとパスワードを入れてください");
+      if(!users.some(u=>u.email===email)) users.unshift({email,name:"（デモ）オーナー",role:"オーナー",at:"",last:"たった今"});
+      const u=users.find(x=>x.email===email); return {token:"demo",me:{email:u.email,name:u.name,role:u.role},period:periods[2],periods}},
+    adminLogout:()=>({ok:true}),
+    adminChangePassword:(o,n)=>{if(String(n||"").length<8)throw new Error("パスワードは8文字以上にしてください");return{ok:true}},
+    adminUsers:()=>users.map(u=>Object.assign({},u)),
+    adminAddUser:(c)=>{const email=String(c.email||"").trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))throw new Error("メールアドレスの形が違います");
+      if(users.some(u=>u.email===email))throw new Error("すでに登録されています");
+      users.push({email,name:String(c.name||"").trim(),role:c.role==="オーナー"?"オーナー":"閲覧者",at:"たった今",last:""});return{email,password:"demo2345pw"}},
+    adminRemoveUser:(email)=>{users=users.filter(u=>u.email!==email);return{ok:true}},
+    adminResetUserPassword:(email)=>({email,password:"demo6789pw"}),
+    adminOverview:(period)=>{
+      const rows=resp.filter(r=>r.period===period), people=[];
+      STORES.forEach(s=>members[s].forEach(m=>{const sc=score(rows.filter(r=>r.name===m.name),m.name);
+        people.push({store:s,name:m.name,role:m.role,n:sc.n,avg:sc.avg,overall:sc.overall,analyzed:!!ai[period+"|"+m.name],
+          status:(lock[m.name]||{}).state||"未提出",statusAt:(lock[m.name]||{}).at||"",rank:(finals[period+"|"+m.name]||{}).rank||""})}));
+      return {period,periods,people,isCurrent:period===periods[2],passphrase:pass,open:opState(),
+        formUrl:"https:\/\/script.google.com/macros/s/AKfycbz_DEMO_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP/exec"};
+    },
+    adminSetConfig:(c)=>{const v=String(c.passphrase||"").trim();if(!v)throw new Error("合言葉が空です");
+      if(c.from&&c.to&&c.from>c.to)throw new Error("受付開始日が終了日より後になっています");pass=v;opFrom=c.from;opTo=c.to;return{passphrase:v,open:opState()}},
+    adminDeleteEntry:(name)=>{const per=periods[2];let n=0;for(let i=resp.length-1;i>=0;i--){if(resp[i].period===per&&resp[i].by===name){resp.splice(i,1);n++;}}delete lock[name];return{period:per,rows:n,lock:1}},
+    adminClearPeriod:(per,conf)=>{if(String(conf||"").trim()!==per)throw new Error(`確認のため、査定期の名前「${per}」をそのまま入力してください`);
+      let n=0;for(let i=resp.length-1;i>=0;i--){if(resp[i].period===per){resp.splice(i,1);n++;}}
+      if(per===periods[2]) Object.keys(lock).forEach(k=>delete lock[k]);
+      Object.keys(ai).forEach(k=>{if(k.startsWith(per+"|"))delete ai[k];}); Object.keys(finals).forEach(k=>{if(k.startsWith(per+"|"))delete finals[k];});
+      for(let i=ivs.length-1;i>=0;i--) if(ivs[i].period===per) ivs.splice(i,1);
+      return{period:per,counts:{responses:n,lock:0,ai:0,interviews:0,finals:0},periods}},
+    adminUnlock:(name)=>{const code=String(1000+Math.floor(rnd()*9000));lock[name]={state:"入力中",at:"たった今"};return{code}},
+    adminPerson:person,
+    adminStoreReport:(period)=>({period,stores:STORES.map(st=>{
+      const ppl=members[st].map((m,i)=>{const p=person(period,m.name);const a=ai[period+"|"+m.name];const f=finals[period+"|"+m.name];
+        return{name:m.name,role:m.role,order:i+1,n:p.n,avg:p.avg,overall:p.overall,self:p.self,rank:p.n?p.bench.rank:null,
+          final:f?{rank:f.rank,note:f.note}:null,analysis:a?{overall:a.a.overall,good:a.a.good.map(g=>g.point),bad:a.a.bad.map(g=>g.point),advice:a.a.advice}:null,
+          bonus:i===members[st].length-1?null:(()=>{const base=/店長|部長/.test(m.role)?320000:/副店長|主任/.test(m.role)?200000:/リーダー/.test(m.role)?120000:60000;
+            const prev=base+((i*7919)%5)*5000, cur=i%4===3?null:prev+(((i*31)%7)-2)*5000;return{cur,prev,yoy:prev-10000};})()};});
+      const sc=ppl.filter(p=>p.n), mean=f=>sc.length?r2(sc.reduce((x,p)=>x+f(p),0)/sc.length):null;
+      return{store:st,count:sc.length,avg:[0,1,2].map(i=>mean(p=>p.avg[i])),overall:mean(p=>p.overall),people:ppl};}),
+      bonus:{labels:{cur:"2026冬",prev:"2026夏",yoy:"2025冬"},error:"",unmatched:STORES.map(st=>members[st][members[st].length-1].name)}}),
+    adminSaveFinal:(c)=>{const k=(c.period||periods[2])+"|"+c.name; if(!c.rank){delete finals[k];return null;}
+      const now=new Date(),at=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+      return finals[k]={rank:c.rank,note:String(c.note||""),by:"（デモ）オーナー",at};},
+    adminAnalyze:(period,name)=>{const p=person(period,name);const a=fakeAnalysis(p);const now=new Date();
+      const at=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+      ai[period+"|"+name]={a,at};return{analysis:a,analyzedAt:at}},
+    adminSaveInterview:(rec)=>{
+      const ss=rec.text.split(/[。\n]/).map(s=>s.trim()).filter(Boolean);
+      const r={period:rec.period,name:rec.name,store:storeOf(rec.name),date:rec.date,interviewer:rec.interviewer,raw:rec.text,
+        summary:ss.slice(0,2).join("。")+"。",
+        guidance:ss.filter(s=>/伝えた|指導|ように|助言|お願い/.test(s)),
+        commitments:ss.filter(s=>/します|する。?$|目標|約束|話があった|やる/.test(s)&&!/伝えた/.test(s)),
+        next_check:["（本番ではAIが面談内容から次回確認事項を抜き出します）"],at:""};
+      ivs.push(r); return r;
+    }
+  };
+})();
+window.__mainOk = true; // 本体が最後まで読み込めた印（下の調べ役が見る）
+</script>
+<script>
+/* 調べ役：本体のプログラムが動かなかったとき（window.__mainOk が無い）、本体を1行ずつ読み直して、
+   読めなくなった行と文字コードを画面に赤い枠で表示する。GASが配信時に書き換えた後の中身を調べられる */
+(function () {
+  if (window.__mainOk) return;
+  try {
+    var ss = document.scripts, main = null;
+    for (var i = 0; i < ss.length; i++) { if (ss[i].text.indexOf("__mainOk") >= 0 && ss[i].text.length > 5000) main = ss[i]; }
+    var box = document.createElement("pre");
+    box.style.cssText = "white-space:pre-wrap;word-break:break-all;background:#fff0f0;color:#900;border:2px solid #c00;border-radius:8px;padding:10px;margin:10px;font-size:12px;line-height:1.5;position:relative;z-index:99";
+    var out = "\u753b\u9762\u306e\u30d7\u30ed\u30b0\u30e9\u30e0\u304c\u52d5\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u3053\u306e\u8d64\u3044\u67a0\u3092\u30b9\u30af\u30ea\u30fc\u30f3\u30b7\u30e7\u30c3\u30c8\u3067\u9001\u3063\u3066\u304f\u3060\u3055\u3044\u3002\n";
+    if (!main) { out += "main script not found (scripts=" + ss.length + ")\n"; }
+    else {
+      var lines = ("<script>" + main.text).split("\n"), whole = "";
+      try { new Function(main.text); out += "parse OK (runtime error?)\n"; } catch (e1) { whole = e1.name + ": " + e1.message; out += "whole: " + whole + "\n"; }
+      if (whole) {
+        // 最後から1行ずつ削り、同じエラーが消える直前の行を探す（途中で切ったときの別のエラーと区別するため）
+        var msg = e1msg(whole), bad = 0;
+        for (var n = lines.length; n >= 2; n--) {
+          var m2 = "";
+          try { new Function(lines.slice(1, n - 1).join("\n")); } catch (e2) { m2 = e2.message; }
+          if (m2 !== msg) { bad = n; break; }
+        }
+        if (bad) {
+          out += "line " + bad + " (from <script> line)\n";
+          for (var k = Math.max(1, bad - 3); k <= Math.min(lines.length, bad + 3); k++) {
+            var t = lines[k - 1] || "", codes = [];
+            for (var j = 0; j < t.length; j++) { var cc = t.charCodeAt(j); if (cc < 32 || cc > 126) codes.push(j + ":" + cc.toString(16)); }
+            out += (k === bad ? ">> " : "   ") + k + ": " + (t.length > 300 ? t.slice(0, 300) + "..." : t) + "\n";
+            if (k === bad) out += "      non-ascii: " + (codes.join(" ") || "(none)") + "\n";
+          }
+        } else out += "line not found\n";
+      }
+    }
+    box.textContent = out;
+    document.body.insertBefore(box, document.body.firstChild);
+  } catch (x) { try { document.body.insertAdjacentHTML("afterbegin", "<pre style='color:#900'>diag error: " + String(x) + "</pre>"); } catch (y) {} }
+  function e1msg(w) { return w.slice(w.indexOf(": ") + 2); }
+})();
+</script>
+</body>
+</html>
