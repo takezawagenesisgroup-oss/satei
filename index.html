@@ -103,6 +103,7 @@
   .gnote{background:#f3f6fc;border-radius:8px;padding:10px;margin-top:12px!important}
   .gnote.locked{background:#f4f4f6;color:var(--text)!important}
   .demo-hint{font-size:12px!important;color:#8a4b00!important;margin-top:14px!important}
+  .admin-link{display:block;text-align:center;margin-top:22px;font-size:12.5px;color:#6b7280;text-decoration:underline}
   .save{background:#eef0f4;color:var(--navy);border:0;border-radius:10px;padding:13px 14px;font-size:14px;font-weight:700}
   .save:disabled{opacity:.5}
   .code{font-size:44px;font-weight:800;letter-spacing:.25em;text-align:center;background:#f3f6fc;border-radius:12px;padding:14px 0;margin:12px 0;color:var(--navy);font-variant-numeric:tabular-nums}
@@ -123,6 +124,8 @@
     <div class="gerr" id="passErr"></div>
     <button class="gbtn" id="passBtn" type="button">次へ</button>
     <p class="demo-hint" id="demoHint"></p>
+    <!-- 管理者の入口（ログインが要る）。URLはGASなら doGet が、Googleの外では同じ場所の admin.html に置き換える -->
+    <a class="admin-link" id="adminLink" href="__ADMIN_URL__" target="_top">管理者の方はこちら（ログイン）</a>
   </div>
 </div>
 
@@ -200,6 +203,8 @@ const LEVELS = [
 const isGAS = typeof google!=="undefined" && google.script && google.script.run;
 /* 本番（GASから配信、またはGoogleの外に置いた画面）なら true。false のときだけデモデータで動く */
 const LIVE=!!isGAS||!!(typeof window!=="undefined"&&window.GENESIS_API);
+// 管理者の入口：GASから配信したときは doGet がURLを入れる。それ以外（Googleの外・デモ）は同じ場所の admin.html
+(()=>{const a=document.getElementById("adminLink"); if(a&&/__ADMIN_URL__/.test(a.getAttribute("href"))) a.setAttribute("href","admin.html");})();
 
 /* ==================== API ==================== */
 /* 画面をGoogle以外の場所（GitHub Pagesなど）に置いたときは、ここに本番のURLが入る（tools/build-static.js）。
