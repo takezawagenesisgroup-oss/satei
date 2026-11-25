@@ -1,0 +1,1970 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>賞与ダッシュボード（賞与査定 管理画面）</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:  #fcfcfb;
+    --surface-2:  #ffffff;
+    --page:       #f9f9f7;
+    --text-1:     #0b0b0b;
+    --text-2:     #52514e;
+    --text-muted: #898781;
+    --grid:       #e1e0d9;
+    --baseline:   #c3c2b7;
+    --border:     rgba(11,11,11,0.10);
+    --good:       #0ca30c;
+    --critical:   #d03b3b;
+    --s-opera:    #2a78d6;
+    --s-gossam:   #eb6834;
+    --s-el:       #1baf7a;
+    --s-indirect: #eda100;
+    --s-total:    #e87ba4;
+    --input-bg:   #ffffff;
+    --g1: #7d5ba6;
+    --g2: #1c8c68;
+    --g3: #c1440e;
+    --g4: #2f6690;
+    --g5: #b8860b;
+    --g6: #a83e5a;
+    --gender-m: var(--s-opera);
+    --gender-f: var(--s-total);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:  #1a1a19;
+      --surface-2:  #232322;
+      --page:       #0d0d0d;
+      --text-1:     #ffffff;
+      --text-2:     #c3c2b7;
+      --text-muted: #898781;
+      --grid:       #2c2c2a;
+      --baseline:   #383835;
+      --border:     rgba(255,255,255,0.10);
+      --good:       #0ca30c;
+      --critical:   #e66767;
+      --s-opera:    #3987e5;
+      --s-gossam:   #d95926;
+      --s-el:       #199e70;
+      --s-indirect: #c98500;
+      --s-total:    #d55181;
+      --input-bg:   #17171a;
+      --g1: #a68be0;
+      --g2: #33c58f;
+      --g3: #e8703f;
+      --g4: #5aa6da;
+      --g5: #d9a520;
+      --g6: #dd7fa0;
+      --gender-m: var(--s-opera);
+      --gender-f: var(--s-total);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:  #1a1a19;
+    --surface-2:  #232322;
+    --page:       #0d0d0d;
+    --text-1:     #ffffff;
+    --text-2:     #c3c2b7;
+    --text-muted: #898781;
+    --grid:       #2c2c2a;
+    --baseline:   #383835;
+    --border:     rgba(255,255,255,0.10);
+    --good:       #0ca30c;
+    --critical:   #e66767;
+    --s-opera:    #3987e5;
+    --s-gossam:   #d95926;
+    --s-el:       #199e70;
+    --s-indirect: #c98500;
+    --s-total:    #d55181;
+    --input-bg:   #17171a;
+    --g1: #a68be0;
+    --g2: #33c58f;
+    --g3: #e8703f;
+    --g4: #5aa6da;
+    --g5: #d9a520;
+    --g6: #dd7fa0;
+    --gender-m: var(--s-opera);
+    --gender-f: var(--s-total);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-1);
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--text-2); font-size: 15px; margin: 0 0 20px; }
+
+  .panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 14px; color: var(--text-2); }
+  .field input[type=text] {
+    font-family: inherit; font-size: 16px; padding: 7px 10px;
+    border: 1px solid var(--baseline); border-radius: 7px;
+    background: var(--input-bg); color: var(--text-1); width: 110px;
+  }
+  .period-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .period-tab {
+    font-family: inherit; font-size: 15px; padding: 6px 12px;
+    border-radius: 7px; border: 1px solid var(--baseline);
+    background: var(--surface-2); color: var(--text-2); cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .period-tab:hover { border-color: var(--text-2); color: var(--text-1); }
+  .period-tab.active { background: var(--s-opera); border-color: var(--s-opera); color: #fff; font-weight: 600; }
+  .period-tab.is-new { border-style: dashed; }
+  .compare-note { font-size: 15px; color: var(--text-2); }
+  .compare-note b { color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .btn-row { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    font-family: inherit; font-size: 15px; padding: 7px 13px;
+    border-radius: 7px; border: 1px solid var(--baseline);
+    background: var(--surface-2); color: var(--text-1); cursor: pointer;
+  }
+  button:hover { border-color: var(--text-2); }
+  button.primary { background: var(--s-opera); border-color: var(--s-opera); color: #fff; }
+  button.ghost { background: transparent; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .kpi .label { font-size: 14px; color: var(--text-2); margin-bottom: 6px; }
+  .kpi .value { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size: 15px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--critical); }
+  .delta.flat { color: var(--text-muted); }
+
+  .store-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .store-card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; border-top: 3px solid var(--sc, var(--s-opera));
+  }
+  .store-card .name { font-size: 15px; font-weight: 600; margin-bottom: 6px; display:flex; align-items:center; gap:6px;}
+  .store-card .swatch { width: 10px; height: 10px; border-radius: 3px; background: var(--sc); display:inline-block; }
+  .store-card .value { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .store-card .prior { font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .store-card .rate { font-size: 15px; margin-top: 4px; }
+
+  .section-title { font-size: 16px; font-weight: 600; margin: 0 0 10px; }
+
+  svg text { fill: var(--text-2); font-family: inherit; }
+  .axis-line { stroke: var(--baseline); stroke-width: 1; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; font-size: 14px; color: var(--text-2); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+  .legend-line { width: 14px; height: 2px; border-radius: 1px; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 50;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 14px; color: var(--text-1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18); display: none; line-height: 1.5;
+    max-width: 220px;
+  }
+  .tooltip b { font-variant-numeric: tabular-nums; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  thead th {
+    text-align: right; font-weight: 600; color: var(--text-2); font-size: 14px;
+    padding: 6px 10px; border-bottom: 1px solid var(--baseline);
+    position: sticky; top: 0; background: var(--surface-1); z-index: 3;
+  }
+  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  tbody td { padding: 6px 10px; border-bottom: 1px solid var(--grid); text-align: right; font-variant-numeric: tabular-nums; }
+  tbody td:first-child, tbody td:nth-child(2) { text-align: left; }
+   
+  thead th:first-child, tbody td:first-child {
+    position: sticky; left: 0; background: var(--surface-1); z-index: 2;
+  }
+  tr.group-row td {
+    background: var(--surface-2); font-weight: 600; font-size: 14px; color: var(--text-2);
+    padding-top: 10px;
+  }
+  input.amount-input {
+    width: 92px; font-family: inherit; font-size: 15px; text-align: right;
+    padding: 5px 8px; border: 1px solid var(--baseline); border-radius: 6px;
+    background: var(--input-bg); color: var(--text-1);
+  }
+  input.amount-input:focus { outline: 2px solid var(--s-opera); outline-offset: 1px; }
+  .badge { display: inline-flex; align-items: center; gap: 3px; font-size: 14px; padding: 2px 7px; border-radius: 999px; }
+  .badge.up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .badge.down { color: var(--critical); background: color-mix(in srgb, var(--critical) 14%, transparent); }
+  .badge.flat { color: var(--text-muted); background: color-mix(in srgb, var(--text-muted) 14%, transparent); }
+  .badge.new { color: var(--s-opera); background: color-mix(in srgb, var(--s-opera) 14%, transparent); }
+
+  .hist-toggle {
+    border: none; background: transparent; color: var(--text-1); cursor: pointer;
+    font-size: 15px; font-family: inherit; padding: 4px 6px; margin: -4px -6px;
+    border-radius: 6px; width: auto; text-align: left;
+  }
+  .hist-toggle:hover { background: var(--surface-2); border-color: transparent; }
+  .hist-caret { color: var(--text-muted); font-size: 13px; }
+  .name-cell { display: flex; align-items: center; gap: 2px; }
+  .gender-dot {
+    flex: none; width: 10px; height: 10px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--baseline); cursor: pointer;
+    padding: 0; margin-right: 2px;
+  }
+  .diff-negative { color: var(--critical); }
+  .role-cell-btn {
+    border: none; background: transparent; color: var(--text-muted); cursor: pointer;
+    font-size: 14px; font-family: inherit; padding: 2px 4px; margin: -2px -4px;
+    border-radius: 4px; width: auto; text-align: left;
+    border-bottom: 1px dashed var(--baseline);
+  }
+  .role-cell-btn:hover { background: var(--surface-2); color: var(--text-1); }
+  .row-delete {
+    border: none; background: transparent; color: var(--text-muted); cursor: pointer;
+    font-size: 14px; padding: 3px 6px; border-radius: 4px; width: auto; line-height: 1;
+  }
+  .row-delete:hover { color: var(--critical); border-color: transparent; }
+  tr.detail-row td { background: var(--page); padding: 8px 10px 12px; border-bottom: 1px solid var(--grid); }
+  .person-chart {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 4px; margin-bottom: 10px; max-width: 640px;
+  }
+  .hist-strip { display: flex; gap: 10px; flex-wrap: wrap; }
+  .hist-chip {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 9px; min-width: 62px;
+  }
+  .hist-period { font-size: 12px; color: var(--text-muted); }
+  .hist-input {
+    width: 76px; font-family: inherit; font-size: 14px; text-align: right;
+    padding: 3px 6px; border: 1px solid var(--baseline); border-radius: 5px;
+    background: var(--input-bg); color: var(--text-1); font-variant-numeric: tabular-nums;
+  }
+  .hist-input:focus { outline: 2px solid var(--s-opera); outline-offset: 1px; }
+
+  .add-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .add-row input[type=text] {
+    font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid var(--baseline);
+    border-radius: 6px; background: var(--input-bg); color: var(--text-1);
+  }
+  .foot-note { font-size: 14px; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+  .table-wrap { max-height: 560px; overflow-y: auto; overflow-x: auto; }
+
+  @media (max-width: 860px) {
+    .kpi-grid, .store-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 16px 12px 60px; }
+    .kpi-grid, .store-grid { grid-template-columns: 1fr; }
+     
+    .period-tab, button, select.compare-select { padding: 10px 14px; }
+    .row-delete { padding: 8px 10px; font-size: 16px; }
+    input.amount-input, input.hist-input { padding: 8px 8px; }
+    .btn-row { margin-left: 0; width: 100%; }
+  }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 100; align-items: flex-start; justify-content: center; padding: 40px 16px;
+    overflow-y: auto;
+  }
+  .modal {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    max-width: 640px; width: 100%; padding: 18px 20px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .modal-head h2 { font-size: 18px; margin: 0; }
+  .modal-close {
+    border: none; background: transparent; color: var(--text-muted); cursor: pointer;
+    font-size: 20px; padding: 2px 8px; width: auto; line-height: 1;
+  }
+  .modal-close:hover { color: var(--text-1); }
+
+  .group-card-edit {
+    border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+  }
+  .group-card-head {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer;
+  }
+  .group-card-head .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .group-name-input {
+    flex: 1; font-family: inherit; font-size: 15px; font-weight: 600; padding: 4px 6px;
+    border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text-1);
+  }
+  .group-name-input:hover, .group-name-input:focus { border-color: var(--baseline); background: var(--input-bg); outline: none; }
+  .group-member-filter { padding: 0 10px 6px; }
+  .group-member-filter input {
+    width: 100%; font-family: inherit; font-size: 14px; padding: 5px 8px;
+    border: 1px solid var(--baseline); border-radius: 6px; background: var(--input-bg); color: var(--text-1);
+  }
+  .group-member-list { max-height: 260px; overflow-y: auto; padding: 0 10px 10px; border-top: 1px solid var(--grid); }
+  .group-member-store { font-size: 13px; color: var(--text-muted); font-weight: 600; margin: 8px 0 2px; }
+  .group-member-row { display: flex; align-items: center; gap: 8px; font-size: 15px; padding: 4px 2px; cursor: pointer; }
+  .group-member-row:hover { background: var(--surface-2); border-radius: 6px; }
+
+  select.compare-select {
+    font-family: inherit; font-size: 14px; padding: 5px 8px;
+    border: 1px solid var(--baseline); border-radius: 6px;
+    background: var(--input-bg); color: var(--text-1);
+  }
+
+   
+  #printReport { display: none; }
+  @media print {
+    .wrap, .modal-overlay, .tooltip { display: none !important; }
+    #printReport { display: block !important; }
+    @page { size: A4 landscape; margin: 12mm; }
+    #printReport {
+       
+      --surface-1: #ffffff; --surface-2: #ffffff; --page: #ffffff;
+      --text-1: #000000; --text-2: #222222; --text-muted: #555555;
+      --grid: #bbbbbb; --baseline: #888888; --border: rgba(0,0,0,0.2);
+      --good: #157a15; --critical: #c62828;
+      font-family: inherit;
+    }
+    .print-page { page-break-after: always; break-after: page; }
+    .print-page:last-child { page-break-after: auto; break-after: auto; }
+    .print-title { font-size: 26px; margin: 0 0 4px; }
+    .print-sub { font-size: 15px; color: var(--text-2); margin: 0 0 14px; }
+    .print-section-title { font-size: 20px; margin: 18px 0 8px; }
+    .print-page .kpi-grid, .print-page .store-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 18px;
+    }
+    .print-page .kpi .label, .print-page .store-card .name { font-size: 16px; }
+    .print-page .kpi .value { font-size: 30px; }
+    .print-page .store-card .value { font-size: 24px; }
+    .print-page .kpi .delta, .print-page .store-card .rate,
+    .print-page .store-card .prior, .print-page .foot-note { font-size: 15px; }
+    .print-page .legend { font-size: 15px; margin-bottom: 10px; }
+    .print-page svg { max-width: 100%; }
+    .print-table { width: 100%; border-collapse: collapse; font-size: 16px; }
+    .print-table th {
+      text-align: right; font-weight: 600; color: var(--text-2); font-size: 15px;
+      padding: 7px 10px; border-bottom: 2px solid var(--baseline);
+    }
+    .print-table td { padding: 7px 10px; border-bottom: 1px solid var(--grid); text-align: right; }
+    .print-table th:first-child, .print-table td:first-child,
+    .print-table th:nth-child(2), .print-table td:nth-child(2) { text-align: left; }
+    .print-table tr { page-break-inside: avoid; }
+    .print-table .diff-negative { color: var(--critical); }
+     
+    .print-table .col-highlight {
+      background: #fdf1cf; font-weight: 700;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+  }
+</style>
+
+<div class="wrap">
+  <h1>賞与総額 ダッシュボード</h1>
+  <p class="sub">今回分の賞与額を入力すると、店舗合計・全社合計・前年同期比が自動で更新されます。</p>
+
+  <p class="foot-note" id="syncStatus" style="margin:-8px 0 16px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    <span id="syncStatusText">読み込み中...</span>
+    <button class="ghost" id="btnConnectionSettings" style="display:none">接続設定</button>
+  </p>
+
+  <div class="panel controls" style="align-items:flex-start;">
+    <div class="field">
+      <label>対象期</label>
+      <div class="period-tabs" id="periodTabs"></div>
+    </div>
+    <div class="compare-note" id="compareNote" style="align-self:center;"></div>
+    <div class="btn-row">
+      <button id="btnPrintReport" class="primary">会議用PDFを出力</button>
+      <button id="btnCsv">CSVをダウンロード</button>
+      <button id="btnLoadCsv">CSVを読み込む</button>
+      <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;">
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="store-grid" id="storeGrid"></div>
+
+  <div class="panel">
+    <div class="section-title">店舗別 前年同期比</div>
+    <div class="legend" id="barLegend"></div>
+    <svg id="barChart" width="100%" height="260" viewBox="0 0 1080 260" preserveAspectRatio="xMinYMin meet"></svg>
+  </div>
+
+  <div class="panel">
+    <div class="section-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <span>グループ別 比較</span>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <label class="foot-note" style="margin:0; display:flex; align-items:center; gap:6px;">
+          比較対象
+          <select class="compare-select" id="groupCompareSelect"></select>
+        </label>
+        <button class="ghost" id="btnGroupSettings" style="font-size:14px; padding:5px 10px;">グループ設定</button>
+      </div>
+    </div>
+    <p class="foot-note" id="groupEmptyState" style="display:none; margin:0 0 4px;">
+      グループが未設定です。「グループ設定」から店舗をまたいで従業員をまとめると(役職別・エリア別など自由な単位)、ここに比較結果が表示されます。
+    </p>
+    <div id="groupChartArea">
+      <div class="store-grid" id="groupGrid" style="margin-bottom:16px;"></div>
+      <div class="legend" id="groupBarLegend"></div>
+      <svg id="groupBarChart" width="100%" height="260" viewBox="0 0 1080 260" preserveAspectRatio="xMinYMin meet"></svg>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">店舗合計の推移(2022夏〜今回)</div>
+    <div class="legend" id="trendLegend"></div>
+    <svg id="trendChart" width="100%" height="260" viewBox="0 0 1080 260" preserveAspectRatio="xMinYMin meet"></svg>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">個人別 入力</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr id="tableHeadRow">
+            <th>氏名</th><th>役職</th><th id="thRef1">前年同期</th><th id="thRef2">前回</th><th id="thInput">今回入力</th><th>差額</th><th>上昇率</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="add-row">
+      <input type="text" id="newName" placeholder="氏名">
+      <select id="newStore"></select>
+      <select id="newRole"></select>
+      <input type="text" id="newAmount" placeholder="今回の賞与額(任意)" inputmode="numeric">
+      <button id="btnAddPerson">+ 従業員を追加</button>
+    </div>
+    <p class="foot-note">
+      氏名の左の「▸」を押すと、2022夏〜2025冬までの過去の金額を1人ずつ確認・<b>その場で修正</b>できます(入力ミスの訂正などにお使いください)。
+      修正した過去の金額もブラウザに自動保存され、上昇率や店舗合計にすぐ反映されます。<br>
+      「CSVをダウンロード」→ 表計算ソフトで一番右の列(今回分)に金額を入力して保存 → 「CSVを読み込む」で同じファイルを選ぶと、入力内容がこの画面に反映されます。
+      行の氏名(またはID列)で本人を照合するので、行の並び替えや他の列の編集は自由に行って構いません。<br>
+      入力内容は自動的に共有中のGoogleスプレッドシートに保存されるため、「接続設定」を済ませたPCであれば、
+      どこで開いても数十秒以内に同じ最新データが反映されます(手動でのファイルコピーは不要です)。
+    </p>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<div id="printReport"></div>
+
+<div class="modal-overlay" id="groupModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>グループ設定</h2>
+      <button class="modal-close" id="groupModalClose" title="閉じる">✕</button>
+    </div>
+    <p class="foot-note" style="margin:0 0 12px;">
+      店舗にとらわれず、役職別・エリア別・年次別など自由な単位で従業員をまとめて前年同期比を確認できます。
+      1人が複数のグループに所属してもかまいません。
+    </p>
+    <div id="groupModalBody"></div>
+    <div class="add-row" style="margin-top:14px;">
+      <input type="text" id="newGroupName" placeholder="新しいグループ名(例: 店長職)">
+      <button id="btnAddGroup">+ グループを追加</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="connModalOverlay">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h2>接続設定(Googleスプレッドシート連携)</h2>
+      <button class="modal-close" id="connModalClose" title="閉じる">✕</button>
+    </div>
+    <p class="foot-note" style="margin:0 0 14px;">
+      Apps Scriptをデプロイしたときに発行された、<b>/exec で終わるウェブアプリURL</b>と、Code.gs内の
+      <b>API_SECRET</b>に設定した合言葉を入力してください。設定するとこのPC・このブラウザで自動的に同じ
+      Googleスプレッドシートを見にいくようになり、他のPCでも同じ設定をすれば同じ最新データが見られます。
+    </p>
+    <div class="field" style="margin-bottom:10px;">
+      <label>ウェブアプリURL</label>
+      <input type="text" id="connUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;">
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>合言葉(API_SECRET)</label>
+      <input type="text" id="connSecretInput" placeholder="Code.gsのAPI_SECRETと同じ値" style="width:100%;">
+    </div>
+    <div class="btn-row" style="margin-left:0; gap:8px;">
+      <button class="primary" id="btnConnSave">保存して接続</button>
+      <button class="ghost" id="btnConnClear">接続を解除</button>
+    </div>
+  </div>
+</div>
+
+<script>window.GENESIS_API="https:\/\/script.google.com\/macros\/s\/AKfycbxV6Nvcrja7Mhj346IcAL9Vn2h31YU-nJ251_CYQq94xbHcKQWcTOgQWPBp6l73ctQXAg\/exec";</script>
+<script>
+/* ===== 賞与査定の管理画面に組み込んだ賞与ダッシュボード =====
+   元の賞与ダッシュボード（別のApps Script）の画面を、査定の管理画面の中で動くようにしたもの。
+   データは管理者がログインしたあと、査定システムのサーバー（adminBonus）経由で読み書きする。
+   この画面のファイルには金額や名前を入れない（公開の場所に置くため）。下の APP_DATA はデモ用の架空の人だけ */
+const API_URL = (typeof window !== 'undefined' && window.GENESIS_API) || '';
+let TOKEN = '';
+const DEMO_PEOPLE = [
+  {"id":"d1","name":"（デモ）山田 太郎","storeRaw":"オペラ","store":"オペラ","role":"お客様店長","amounts":{"2025冬":300000,"2026夏":280000}},
+  {"id":"d2","name":"（デモ）佐藤 花子","storeRaw":"ゴッサム","store":"ゴッサム","role":"社員","amounts":{"2025冬":150000,"2026夏":160000}},
+  {"id":"d3","name":"（デモ）鈴木 一郎","storeRaw":"エル","store":"エル","role":"キャスト","amounts":{"2025冬":50000,"2026夏":55000}}
+];
+const APP_DATA = {"periods":["2025冬","2026夏"],"storeOrder":["オペラ","ゴッサム","エル","間接部門"],"roleRank":{"取締役営業本部長":0,"常務取締役":0,"取締役":0,"お客様店長":1,"店長":1,"お客様店長代理":2,"店長代理":2,"主任":3,"社員":4,"キャスト":5,"クリーンスタッフ":6,"パート":7,"昼清掃":8},
+  "people": API_URL ? [] : DEMO_PEOPLE};
+
+const STORE_COLOR_VAR = { 'オペラ':'--s-opera', 'ゴッサム':'--s-gossam', 'エル':'--s-el', '間接部門':'--s-indirect' };
+function storeColor(store){
+  const v = STORE_COLOR_VAR[store] || '--s-opera';
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+
+function parsePeriod(label){
+  const m = /^(\d{4})(夏|冬)$/.exec((label||'').trim());
+  if(!m) return null;
+  return { year: parseInt(m[1],10), season: m[2] };
+}
+function formatPeriod(y,s){ return `${y}${s}`; }
+function nextPeriod(label){
+  const p = parsePeriod(label);
+  if(!p) return label;
+  return p.season === '夏' ? formatPeriod(p.year, '冬') : formatPeriod(p.year+1, '夏');
+}
+function priorYearSame(label){
+  const p = parsePeriod(label);
+  if(!p) return null;
+  return formatPeriod(p.year-1, p.season);
+}
+
+
+
+
+function prevPeriod(label){
+  const p = parsePeriod(label);
+  if(!p) return null;
+  return p.season === '夏' ? formatPeriod(p.year-1, '冬') : formatPeriod(p.year, '夏');
+}
+function roleRank(role){
+  if(role && APP_DATA.roleRank && (role in APP_DATA.roleRank)) return APP_DATA.roleRank[role];
+  return 99;
+}
+
+
+const GENDER_CYCLE = ['', '男性', '女性'];
+function genderColorVar(g){ return g === '男性' ? '--gender-m' : g === '女性' ? '--gender-f' : null; }
+
+
+
+APP_DATA.nextNewPeriod = nextPeriod(APP_DATA.periods[APP_DATA.periods.length-1]);
+let currentPeriod = localStorage.getItem('bonusdash_current_period') || APP_DATA.nextNewPeriod;
+
+
+
+
+let people = APP_DATA.people.map(p => ({...p, amounts: {...p.amounts}}));
+let groups = []; 
+
+const GROUP_COLOR_VARS = ['--g1','--g2','--g3','--g4','--g5','--g6'];
+function groupColorVar(i){ return GROUP_COLOR_VARS[i % GROUP_COLOR_VARS.length]; }
+
+
+
+
+
+
+function defaultGroupCompareLabel(){
+  const py = priorYearSame(currentPeriod);
+  if(py && APP_DATA.periods.includes(py)) return py;
+  return APP_DATA.periods[APP_DATA.periods.length-1];
+}
+function loadGroupCompareLabel(){
+  const saved = localStorage.getItem('bonusdash_group_compare_period');
+  return (saved && APP_DATA.periods.includes(saved)) ? saved : defaultGroupCompareLabel();
+}
+let groupCompareLabel = loadGroupCompareLabel();
+
+let expandedIds = new Set(); 
+let transferringId = null; 
+let editingRoleId = null; 
+
+function fmtYen(n){
+  if(n === null || n === undefined || isNaN(n)) return '-';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function fmtPct(n){
+  if(n === null || n === undefined || !isFinite(n)) return '-';
+  const s = n >= 0 ? '+' : '';
+  return s + n.toFixed(1) + '%';
+}
+function rateClass(n){
+  if(n === null || n === undefined || !isFinite(n)) return 'flat';
+  if(n > 0.05) return 'up';
+  if(n < -0.05) return 'down';
+  return 'flat';
+}
+function rateIcon(cls){
+  return cls === 'up' ? '▲' : cls === 'down' ? '▼' : '‒';
+}
+
+
+function isHistorical(period){ return APP_DATA.periods.includes(period); }
+
+function computeAll(){
+  const compareLabel = priorYearSame(currentPeriod);
+  const compareExists = compareLabel && APP_DATA.periods.includes(compareLabel);
+  const ref2Label = prevPeriod(currentPeriod);
+  const ref2Exists = ref2Label && APP_DATA.periods.includes(ref2Label) && ref2Label !== compareLabel;
+  const histMode = isHistorical(currentPeriod);
+
+  const perPerson = people.map(p => {
+    const prior = compareExists ? (p.amounts[compareLabel] ?? null) : null;
+    const ref2 = ref2Exists ? (p.amounts[ref2Label] ?? null) : null;
+    
+    
+    const v = p.amounts[currentPeriod];
+    const input = (v === undefined || v === null) ? null : Number(v);
+    let rate = null;
+    if(input !== null){
+      if(prior && prior > 0) rate = (input - prior) / prior * 100;
+      else if(prior === 0 || prior === null) rate = null; 
+    }
+    return { person: p, prior, ref2, input, rate };
+  });
+
+  
+  
+  
+  
+  const storeAgg = {};
+  APP_DATA.storeOrder.forEach(s => storeAgg[s] = { store: s, priorSum: 0, priorSumMatched: 0, curSum: 0, priorCount:0, curCount:0 });
+  perPerson.forEach(r => {
+    const s = r.person.store;
+    if(!storeAgg[s]) storeAgg[s] = { store: s, priorSum: 0, priorSumMatched: 0, curSum: 0, priorCount:0, curCount:0 };
+    if(r.prior){ storeAgg[s].priorSum += r.prior; storeAgg[s].priorCount++; }
+    if(r.input !== null){
+      storeAgg[s].curSum += r.input;
+      storeAgg[s].curCount++;
+      if(r.prior){ storeAgg[s].priorSumMatched += r.prior; }
+    }
+  });
+  const storeList = APP_DATA.storeOrder.map(s => {
+    const a = storeAgg[s];
+    const rate = (a.priorSumMatched > 0 && a.curCount > 0) ? (a.curSum - a.priorSumMatched)/a.priorSumMatched*100 : null;
+    return {...a, rate};
+  });
+
+  const companyPrior = storeList.reduce((s,a)=>s+a.priorSum,0);
+  const companyPriorMatched = storeList.reduce((s,a)=>s+a.priorSumMatched,0);
+  const companyCur = storeList.reduce((s,a)=>s+a.curSum,0);
+  const enteredCount = perPerson.filter(r => r.input !== null).length;
+  const companyRate = (companyPriorMatched > 0 && enteredCount > 0) ? (companyCur - companyPriorMatched)/companyPriorMatched*100 : null;
+
+  
+  
+  
+  
+  
+  
+  const groupList = groups.map(g => {
+    const rows = perPerson.filter(r => g.memberIds.includes(r.person.id));
+    let priorSum = 0, priorSumMatched = 0, curSum = 0, priorCount = 0, curCount = 0;
+    rows.forEach(r => {
+      const refRaw = r.person.amounts[groupCompareLabel];
+      const ref = (refRaw === undefined || refRaw === null) ? null : Number(refRaw);
+      if(ref){ priorSum += ref; priorCount++; }
+      if(r.input !== null){
+        curSum += r.input;
+        curCount++;
+        if(ref){ priorSumMatched += ref; }
+      }
+    });
+    const rate = (priorSumMatched > 0 && curCount > 0) ? (curSum - priorSumMatched)/priorSumMatched*100 : null;
+    return { id: g.id, name: g.name, memberCount: rows.length, priorSum, priorSumMatched, curSum, priorCount, curCount, rate };
+  });
+
+  return { compareLabel, compareExists, ref2Label, ref2Exists, histMode, perPerson, storeList, groupList, companyPrior, companyCur, companyRate, enteredCount, total: people.length };
+}
+
+
+const tooltip = document.getElementById('tooltip');
+function showTip(html, x, y){
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (x+14)+'px';
+  tooltip.style.top = (y+14)+'px';
+}
+function hideTip(){ tooltip.style.display = 'none'; }
+
+function periodTabList(){
+  const list = [...APP_DATA.periods, APP_DATA.nextNewPeriod];
+  if(!list.includes(currentPeriod)) list.push(currentPeriod);
+  return list;
+}
+
+function renderPeriodTabs(){
+  const el = document.getElementById('periodTabs');
+  el.innerHTML = periodTabList().map(p => {
+    const isNew = !isHistorical(p);
+    const cls = ['period-tab', p===currentPeriod?'active':'', isNew?'is-new':''].filter(Boolean).join(' ');
+    return `<button class="${cls}" data-period="${p}">${p}${isNew?' (新規)':''}</button>`;
+  }).join('');
+  el.querySelectorAll('.period-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchPeriod(btn.dataset.period));
+  });
+}
+
+function switchPeriod(period){
+  if(period === currentPeriod) return;
+  currentPeriod = period;
+  localStorage.setItem('bonusdash_current_period', currentPeriod);
+  renderAll();
+}
+
+function renderControls(stats){
+  renderPeriodTabs();
+  const note = document.getElementById('compareNote');
+  const modeNote = stats.histMode
+    ? `<span class="badge new" style="margin-left:6px;">登録済みの期を閲覧・修正中</span>` : '';
+  if(stats.compareExists){
+    note.innerHTML = `前年同期(<b>${stats.compareLabel}</b>)と比較しています${modeNote}`;
+  } else {
+    note.innerHTML = `前年同期(${stats.compareLabel||'-'})のデータがないため比較できません${modeNote}`;
+  }
+  document.getElementById('thRef1').textContent = stats.compareLabel || '前年同期';
+  document.getElementById('thRef2').textContent = stats.ref2Label || '前回';
+  document.getElementById('thInput').textContent = stats.histMode ? `${currentPeriod}(登録済み)` : '今回入力';
+}
+
+function renderKpi(stats){
+  const rateCls = rateClass(stats.companyRate);
+  const hasEntries = stats.enteredCount > 0;
+  const diffVsMatched = hasEntries ? stats.companyCur - stats.companyPriorMatched : null;
+  const diffCls = rateClass(diffVsMatched);
+  const progressNote = hasEntries && stats.enteredCount < stats.total
+    ? `<div class="foot-note" style="margin-top:2px;">入力済み${stats.enteredCount}名分での比較</div>` : '';
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = `
+    <div class="kpi">
+      <div class="label">全社合計(${currentPeriod})</div>
+      <div class="value">${fmtYen(stats.companyCur)}</div>
+      ${hasEntries ? `<div class="delta ${diffCls}">${rateIcon(diffCls)} ${fmtYen(diffVsMatched)}</div>` : `<div class="delta flat">未入力</div>`}
+    </div>
+    <div class="kpi">
+      <div class="label">前年同期合計(${stats.compareLabel||'-'})</div>
+      <div class="value">${fmtYen(stats.companyPrior)}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">全体上昇率</div>
+      <div class="value delta ${rateCls}" style="font-size:26px;">${rateIcon(rateCls)} ${fmtPct(stats.companyRate)}</div>
+      ${progressNote}
+    </div>
+    <div class="kpi">
+      <div class="label">入力済み人数</div>
+      <div class="value">${stats.enteredCount} / ${stats.total}</div>
+    </div>
+  `;
+}
+
+function renderStoreCards(stats){
+  const grid = document.getElementById('storeGrid');
+  grid.innerHTML = stats.storeList.map(s => {
+    const cls = rateClass(s.rate);
+    const varName = STORE_COLOR_VAR[s.store] || '--s-opera';
+    const progress = s.curCount < s.priorCount
+      ? `<div class="prior">入力済み ${s.curCount}/${s.priorCount}名</div>` : '';
+    return `
+      <div class="store-card" style="--sc:var(${varName})">
+        <div class="name"><span class="swatch"></span>${s.store}</div>
+        <div class="value">${fmtYen(s.curSum)}</div>
+        <div class="prior">前年同期 ${fmtYen(s.priorSum)}</div>
+        <div class="rate delta ${cls}">${rateIcon(cls)} ${fmtPct(s.rate)}</div>
+        ${progress}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderBarChart(stats){
+  const svg = document.getElementById('barChart');
+  const W = 1080, H = 260;
+  const pad = { l: 60, r: 20, t: 20, b: 40 };
+  const cats = [...stats.storeList.map(s=>({label:s.store, prior:s.priorSum, cur:s.curSum})),
+                {label:'全社', prior: stats.companyPrior, cur: stats.companyCur}];
+  const maxVal = Math.max(1, ...cats.map(c=>Math.max(c.prior,c.cur)));
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+  const groupW = plotW / cats.length;
+  const barW = Math.min(34, groupW*0.28);
+
+  let gridLines = '';
+  const ticks = 4;
+  for(let i=0;i<=ticks;i++){
+    const v = maxVal / ticks * i;
+    const y = pad.t + plotH - (v/maxVal)*plotH;
+    gridLines += `<line class="grid-line" x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}"/>`;
+    gridLines += `<text x="${pad.l-8}" y="${y+4}" font-size="13" text-anchor="end">${Math.round(v/10000)}万</text>`;
+  }
+
+  let bars = '';
+  cats.forEach((c, i) => {
+    const gx = pad.l + i*groupW;
+    const priorH = (c.prior/maxVal)*plotH;
+    const curH = (c.cur/maxVal)*plotH;
+    const x1 = gx + groupW/2 - barW - 3;
+    const x2 = gx + groupW/2 + 3;
+    const y1 = pad.t + plotH - priorH;
+    const y2 = pad.t + plotH - curH;
+    const priorColor = 'var(--baseline)';
+    const curColor = i === cats.length-1 ? 'var(--s-opera)' : `var(${STORE_COLOR_VAR[c.label]})`;
+    bars += `<rect x="${x1}" y="${y1}" width="${barW}" height="${Math.max(0,priorH)}" rx="3" fill="${priorColor}"
+              data-label="${c.label}" data-kind="前年同期" data-val="${c.prior}" class="bar-mark"/>`;
+    bars += `<rect x="${x2}" y="${y2}" width="${barW}" height="${Math.max(0,curH)}" rx="3" fill="${curColor}"
+              data-label="${c.label}" data-kind="今回" data-val="${c.cur}" class="bar-mark"/>`;
+    bars += `<text x="${gx+groupW/2}" y="${H-pad.b+18}" font-size="14" text-anchor="middle">${c.label}</text>`;
+  });
+
+  svg.innerHTML = `${gridLines}<line class="axis-line" x1="${pad.l}" x2="${W-pad.r}" y1="${pad.t+plotH}" y2="${pad.t+plotH}"/>${bars}`;
+
+  svg.querySelectorAll('.bar-mark').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      showTip(`${el.dataset.label} ・ ${el.dataset.kind}<br><b>${fmtYen(+el.dataset.val)}</b>`, e.clientX, e.clientY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+  });
+
+  document.getElementById('barLegend').innerHTML = `
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--baseline)"></span>前年同期</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--s-opera)"></span>今回</div>
+  `;
+}
+
+function renderGroupSection(stats){
+  const emptyNote = document.getElementById('groupEmptyState');
+  const chartArea = document.getElementById('groupChartArea');
+  const grid = document.getElementById('groupGrid');
+
+  const compareSel = document.getElementById('groupCompareSelect');
+  compareSel.innerHTML = [...APP_DATA.periods].reverse()
+    .map(p => `<option value="${p}" ${p===groupCompareLabel?'selected':''}>${p}</option>`).join('');
+
+  if(!stats.groupList.length){
+    emptyNote.style.display = '';
+    chartArea.style.display = 'none';
+    grid.innerHTML = '';
+    return;
+  }
+  emptyNote.style.display = 'none';
+  chartArea.style.display = '';
+
+  grid.innerHTML = stats.groupList.map((g,i) => {
+    const cls = rateClass(g.rate);
+    const varName = groupColorVar(i);
+    const progress = g.curCount < g.priorCount
+      ? `<div class="prior">入力済み ${g.curCount}/${g.priorCount}名</div>` : '';
+    return `
+      <div class="store-card" style="--sc:var(${varName})">
+        <div class="name"><span class="swatch"></span>${g.name}<span class="foot-note" style="margin-left:auto;">${g.memberCount}名</span></div>
+        <div class="value">${fmtYen(g.curSum)}</div>
+        <div class="prior">${groupCompareLabel} ${fmtYen(g.priorSum)}</div>
+        <div class="rate delta ${cls}">${rateIcon(cls)} ${fmtPct(g.rate)}</div>
+        ${progress}
+      </div>
+    `;
+  }).join('');
+
+  const svg = document.getElementById('groupBarChart');
+  const W = 1080, H = 260;
+  const pad = { l: 60, r: 20, t: 20, b: 40 };
+  const cats = stats.groupList.map((g,i) => ({ label: g.name, prior: g.priorSum, cur: g.curSum, colorVar: groupColorVar(i) }));
+  const maxVal = Math.max(1, ...cats.map(c=>Math.max(c.prior,c.cur)));
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+  const groupW = plotW / cats.length;
+  const barW = Math.min(34, groupW*0.28);
+
+  let gridLines = '';
+  const ticks = 4;
+  for(let i=0;i<=ticks;i++){
+    const v = maxVal / ticks * i;
+    const y = pad.t + plotH - (v/maxVal)*plotH;
+    gridLines += `<line class="grid-line" x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}"/>`;
+    gridLines += `<text x="${pad.l-8}" y="${y+4}" font-size="13" text-anchor="end">${Math.round(v/10000)}万</text>`;
+  }
+
+  let bars = '';
+  cats.forEach((c, i) => {
+    const gx = pad.l + i*groupW;
+    const priorH = (c.prior/maxVal)*plotH;
+    const curH = (c.cur/maxVal)*plotH;
+    const x1 = gx + groupW/2 - barW - 3;
+    const x2 = gx + groupW/2 + 3;
+    const y1 = pad.t + plotH - priorH;
+    const y2 = pad.t + plotH - curH;
+    bars += `<rect x="${x1}" y="${y1}" width="${barW}" height="${Math.max(0,priorH)}" rx="3" fill="var(--baseline)"
+              data-label="${c.label}" data-kind="${groupCompareLabel}" data-val="${c.prior}" class="bar-mark"/>`;
+    bars += `<rect x="${x2}" y="${y2}" width="${barW}" height="${Math.max(0,curH)}" rx="3" fill="var(${c.colorVar})"
+              data-label="${c.label}" data-kind="今回(${currentPeriod})" data-val="${c.cur}" class="bar-mark"/>`;
+    bars += `<text x="${gx+groupW/2}" y="${H-pad.b+18}" font-size="14" text-anchor="middle">${c.label}</text>`;
+  });
+
+  svg.innerHTML = `${gridLines}<line class="axis-line" x1="${pad.l}" x2="${W-pad.r}" y1="${pad.t+plotH}" y2="${pad.t+plotH}"/>${bars}`;
+
+  svg.querySelectorAll('.bar-mark').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      showTip(`${el.dataset.label} ・ ${el.dataset.kind}<br><b>${fmtYen(+el.dataset.val)}</b>`, e.clientX, e.clientY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+  });
+
+  document.getElementById('groupBarLegend').innerHTML = `
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--baseline)"></span>${groupCompareLabel}</div>
+    ${stats.groupList.map((g,i) => `<div class="legend-item"><span class="legend-swatch" style="background:var(${groupColorVar(i)})"></span>${g.name}(今回)</div>`).join('')}
+  `;
+}
+
+// Builds the {store, vals[]} series used by both the store trend chart and
+
+
+
+function buildStoreSeries(periods, stats){
+  return APP_DATA.storeOrder.map(store => {
+    const vals = periods.map(p => {
+      if(p === currentPeriod && !isHistorical(p)){
+        const curVal = stats.storeList.find(s=>s.store===store).curSum;
+        return curVal > 0 ? curVal : null;
+      }
+      let sum = 0, any = false;
+      people.filter(pp=>pp.store===store).forEach(pp => { if(pp.amounts[p] != null){ sum += pp.amounts[p]; any = true; } });
+      return any ? sum : null;
+    });
+    return { store, vals };
+  });
+}
+
+function renderTrendChart(stats){
+  const svg = document.getElementById('trendChart');
+  const W = 1080, H = 260;
+  const pad = { l: 60, r: 100, t: 20, b: 30 };
+  const allPeriods = isHistorical(currentPeriod) ? [...APP_DATA.periods] : [...APP_DATA.periods, currentPeriod];
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+
+  const seriesByStore = buildStoreSeries(allPeriods, stats);
+  const totalVals = allPeriods.map((p,i) => {
+    const anyPresent = seriesByStore.some(ser => ser.vals[i] != null);
+    if(!anyPresent) return null;
+    return seriesByStore.reduce((acc,ser) => acc + (ser.vals[i] || 0), 0);
+  });
+
+  const maxVal = Math.max(1, ...seriesByStore.flatMap(s=>s.vals.filter(v=>v!=null)), ...totalVals.filter(v=>v!=null));
+  const stepX = plotW / (allPeriods.length - 1);
+
+  let gridLines = '';
+  const ticks = 4;
+  for(let i=0;i<=ticks;i++){
+    const v = maxVal/ticks*i;
+    const y = pad.t + plotH - (v/maxVal)*plotH;
+    gridLines += `<line class="grid-line" x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}"/>`;
+    gridLines += `<text x="${pad.l-8}" y="${y+4}" font-size="13" text-anchor="end">${Math.round(v/10000)}万</text>`;
+  }
+  let xLabels = '';
+  allPeriods.forEach((p,i) => {
+    const x = pad.l + i*stepX;
+    xLabels += `<text x="${x}" y="${H-8}" font-size="13" text-anchor="middle">${p}${(p===currentPeriod && !isHistorical(p))?'(今回)':''}</text>`;
+  });
+
+  let lines = '';
+  let dots = '';
+  let endLabels = '';
+  seriesByStore.forEach(s => {
+    const color = `var(${STORE_COLOR_VAR[s.store]})`;
+    let d = '';
+    let lastPt = null;
+    s.vals.forEach((v,i) => {
+      if(v == null) return;
+      const x = pad.l + i*stepX;
+      const y = pad.t + plotH - (v/maxVal)*plotH;
+      d += (d ? ' L ' : 'M ') + x + ' ' + y;
+      dots += `<circle cx="${x}" cy="${y}" r="4" fill="${color}" data-store="${s.store}" data-period="${allPeriods[i]}" data-val="${v}" class="trend-dot"/>`;
+      lastPt = {x,y};
+    });
+    lines += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if(lastPt) endLabels += `<text x="${lastPt.x+8}" y="${lastPt.y+4}" font-size="13" fill="${color}" style="fill:${color}">${s.store}</text>`;
+  });
+
+  // company-wide total, drawn on top with a heavier stroke so it reads as
+  
+  {
+    const color = 'var(--s-total)';
+    let d = '';
+    let lastPt = null;
+    totalVals.forEach((v,i) => {
+      if(v == null) return;
+      const x = pad.l + i*stepX;
+      const y = pad.t + plotH - (v/maxVal)*plotH;
+      d += (d ? ' L ' : 'M ') + x + ' ' + y;
+      dots += `<circle cx="${x}" cy="${y}" r="4.5" fill="${color}" data-store="全社" data-period="${allPeriods[i]}" data-val="${v}" class="trend-dot"/>`;
+      lastPt = {x,y};
+    });
+    lines += `<path d="${d}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if(lastPt) endLabels += `<text x="${lastPt.x+8}" y="${lastPt.y+4}" font-size="14" font-weight="600" fill="${color}" style="fill:${color}">全社</text>`;
+  }
+
+  svg.innerHTML = `${gridLines}<line class="axis-line" x1="${pad.l}" x2="${W-pad.r}" y1="${pad.t+plotH}" y2="${pad.t+plotH}"/>${lines}${dots}${xLabels}${endLabels}`;
+
+  svg.querySelectorAll('.trend-dot').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      showTip(`${el.dataset.store} ・ ${el.dataset.period}<br><b>${fmtYen(+el.dataset.val)}</b>`, e.clientX, e.clientY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+  });
+
+  document.getElementById('trendLegend').innerHTML = APP_DATA.storeOrder.map(s => `
+    <div class="legend-item"><span class="legend-line" style="background:var(${STORE_COLOR_VAR[s]})"></span>${s}</div>
+  `).join('') + `<div class="legend-item"><span class="legend-line" style="background:var(--s-total); height:3px;"></span><b>全社(合計)</b></div>`;
+}
+
+
+
+
+function personTrendSvg(row){
+  const person = row.person;
+  const periods = isHistorical(currentPeriod) ? [...APP_DATA.periods] : [...APP_DATA.periods, currentPeriod];
+  const years = [...new Set(periods.map(p => parsePeriod(p).year))].sort((a,b) => a - b);
+  function valueFor(year, season){
+    const label = formatPeriod(year, season);
+    if(label === currentPeriod && !isHistorical(label)) return row.input;
+    const v = person.amounts[label];
+    return (v === undefined || v === null) ? null : v;
+  }
+  const natsuVals = years.map(y => valueFor(y, '夏'));
+  const fuyuVals = years.map(y => valueFor(y, '冬'));
+
+  const W = 640, H = 140;
+  const pad = { l: 54, r: 16, t: 12, b: 24 };
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+  const present = [...natsuVals, ...fuyuVals].filter(v => v != null);
+  const maxVal = Math.max(1, ...present);
+  const stepX = years.length > 1 ? plotW / (years.length - 1) : 0;
+
+  let gridLines = '';
+  const ticks = 3;
+  for(let i=0;i<=ticks;i++){
+    const v = maxVal/ticks*i;
+    const y = pad.t + plotH - (v/maxVal)*plotH;
+    gridLines += `<line class="grid-line" x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}"/>`;
+    gridLines += `<text x="${pad.l-6}" y="${y+3}" font-size="11" text-anchor="end">${Math.round(v/10000)}万</text>`;
+  }
+  let xLabels = '';
+  years.forEach((y,i) => {
+    const x = pad.l + i*stepX;
+    xLabels += `<text x="${x}" y="${H-6}" font-size="11" text-anchor="middle">${y}</text>`;
+  });
+
+  function buildSeries(vals, seasonLabel, color){
+    let d = '', dots = '';
+    vals.forEach((v,i) => {
+      if(v == null) return;
+      const x = pad.l + i*stepX;
+      const y = pad.t + plotH - (v/maxVal)*plotH;
+      d += (d ? ' L ' : 'M ') + x + ' ' + y;
+      dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}" data-period="${years[i]}年${seasonLabel}" data-val="${v}" class="person-trend-dot"/>`;
+    });
+    const line = d ? `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>` : '';
+    return line + dots;
+  }
+
+  const natsuMarks = buildSeries(natsuVals, '夏', 'var(--s-gossam)');
+  const fuyuMarks = buildSeries(fuyuVals, '冬', 'var(--s-opera)');
+  const empty = present.length ? '' : `<text x="${W/2}" y="${H/2}" font-size="14" text-anchor="middle">データがありません</text>`;
+
+  return `
+    <div class="legend" style="margin:0 0 4px 4px;">
+      <div class="legend-item"><span class="legend-line" style="background:var(--s-gossam)"></span>夏</div>
+      <div class="legend-item"><span class="legend-line" style="background:var(--s-opera)"></span>冬</div>
+    </div>
+    <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet" data-person-id="${person.id}">
+      ${gridLines}<line class="axis-line" x1="${pad.l}" x2="${W-pad.r}" y1="${pad.t+plotH}" y2="${pad.t+plotH}"/>${natsuMarks}${fuyuMarks}${xLabels}${empty}
+    </svg>`;
+}
+
+function historyStrip(person){
+  return APP_DATA.periods.map(per => {
+    const v = person.amounts[per];
+    return `<div class="hist-chip">
+      <span class="hist-period">${per}</span>
+      <input class="hist-input" type="text" inputmode="numeric" data-id="${person.id}" data-period="${per}" value="${v==null?'':v}" placeholder="-">
+    </div>`;
+  }).join('');
+}
+
+function renderTable(stats){
+  const body = document.getElementById('tableBody');
+  let html = '';
+  APP_DATA.storeOrder.forEach(store => {
+    const rows = stats.perPerson
+      .filter(r => r.person.store === store)
+      .sort((a,b) => {
+        const d = roleRank(a.person.role) - roleRank(b.person.role);
+        return d !== 0 ? d : a.person.name.localeCompare(b.person.name, 'ja');
+      });
+    if(!rows.length) return;
+    html += `<tr class="group-row"><td colspan="8">${store}</td></tr>`;
+    rows.forEach(r => {
+      const cls = rateClass(r.rate);
+      const badge = r.input === null ? '' :
+        (r.prior ? `<span class="badge ${cls}">${rateIcon(cls)} ${fmtPct(r.rate)}</span>` : `<span class="badge new">新規/比較なし</span>`);
+      const diffVal = (r.input !== null && r.prior !== null) ? (r.input - r.prior) : null;
+      const diff = diffVal !== null ? fmtYen(diffVal) : '-';
+      const diffCls = diffVal !== null && diffVal < 0 ? ' class="diff-negative"' : '';
+      const id = r.person.id;
+      const open = expandedIds.has(id);
+      const g = r.person.gender || '';
+      const gVar = genderColorVar(g);
+      const nameStyle = gVar ? ` style="color:var(${gVar});"` : '';
+      const dotStyle = gVar ? ` style="background:var(${gVar}); border-color:var(${gVar});"` : '';
+      const actionsCell = transferringId === id
+        ? `<select class="compare-select store-transfer-select" data-id="${id}" data-prev="${r.person.store}">
+             ${APP_DATA.storeOrder.map(s => `<option value="${s}" ${s===r.person.store?'selected':''}>${s}</option>`).join('')}
+           </select>`
+        : `<button class="row-delete" data-transfer="${id}" title="店舗異動">⇄</button><button class="row-delete" data-id="${id}" data-name="${r.person.name}" title="削除">✕</button>`;
+      const roleCell = editingRoleId === id
+        ? `<select class="compare-select role-edit-select" data-id="${id}" data-prev="${r.person.role||''}">
+             ${ROLE_OPTIONS.map(ro => `<option value="${ro}" ${ro===r.person.role?'selected':''}>${ro}</option>`).join('')}
+           </select>`
+        : `<button class="role-cell-btn" data-id="${id}" title="クリックで役職を変更">${r.person.role||'-'}</button>`;
+      html += `<tr>
+        <td><div class="name-cell">
+          <button class="gender-dot" data-id="${id}" data-gender="${g}"${dotStyle} title="性別表示: ${g||'未設定'}(クリックで切替)"></button>
+          <button class="hist-toggle" data-id="${id}"${nameStyle} title="クリックで過去の推移を表示">${r.person.name} <span class="hist-caret">${open?'▾':'▸'}</span></button>
+        </div></td>
+        <td>${roleCell}</td>
+        <td>${fmtYen(r.prior)}</td>
+        <td>${fmtYen(r.ref2)}</td>
+        <td><input class="amount-input" type="text" inputmode="numeric" data-id="${id}" value="${r.input===null?'':r.input}" placeholder="未入力"></td>
+        <td${diffCls}>${diff}</td>
+        <td>${badge}</td>
+        <td>${actionsCell}</td>
+      </tr>`;
+      if(open){
+        html += `<tr class="detail-row"><td colspan="8">
+          <div class="person-chart">${personTrendSvg(r)}</div>
+          <div class="hist-strip">${historyStrip(r.person)}</div>
+        </td></tr>`;
+      }
+    });
+  });
+  body.innerHTML = html;
+
+  body.querySelectorAll('.amount-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const pid = inp.dataset.id;
+      const raw = inp.value.replace(/[,\s]/g,'');
+      const person = people.find(p => p.id === pid);
+      if(!person) return;
+      if(raw === ''){ person.amounts[currentPeriod] = null; }
+      else if(!isNaN(Number(raw))){ person.amounts[currentPeriod] = Number(raw); }
+      else return;
+      debouncedSetAmount(pid, currentPeriod, person.amounts[currentPeriod]);
+      renderAll();
+      
+      const again = document.querySelector(`.amount-input[data-id="${inp.dataset.id}"]`);
+      if(again){ again.focus(); const v = again.value; again.value=''; again.value=v; }
+    });
+  });
+
+  body.querySelectorAll('.hist-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const pid = inp.dataset.id;
+      const period = inp.dataset.period;
+      const person = people.find(p => p.id === pid);
+      if(!person) return;
+      const raw = inp.value.replace(/[,\s]/g,'');
+      if(raw === ''){ person.amounts[period] = null; }
+      else if(!isNaN(Number(raw))){ person.amounts[period] = Number(raw); }
+      else return;
+      debouncedSetAmount(pid, period, person.amounts[period]);
+      renderAll();
+      const again = document.querySelector(`.hist-input[data-id="${pid}"][data-period="${period}"]`);
+      if(again){ again.focus(); const v = again.value; again.value=''; again.value=v; }
+    });
+  });
+
+  body.querySelectorAll('.hist-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
+      renderTable(computeAll());
+    });
+  });
+
+  body.querySelectorAll('.person-trend-dot').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      showTip(`${el.dataset.period}<br><b>${fmtYen(+el.dataset.val)}</b>`, e.clientX, e.clientY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+  });
+
+  body.querySelectorAll('.row-delete[data-transfer]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      transferringId = btn.dataset.transfer;
+      renderTable(computeAll());
+    });
+  });
+
+  body.querySelectorAll('.gender-dot').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const next = GENDER_CYCLE[(GENDER_CYCLE.indexOf(btn.dataset.gender) + 1) % GENDER_CYCLE.length];
+      if(!isConnected()){ alert('先に「接続設定」からGoogleスプレッドシートと連携してください'); return; }
+      pendingGenderEdits[id] = next; // protect against a concurrent click's response landing first
+      const person = people.find(p => p.id === id);
+      if(person) person.gender = next; // optimistic, so the dot/name color updates immediately
+      renderTable(computeAll());
+      try {
+        const state = await apiCall('setGender', { personId: id, gender: next });
+        applyServerState(state);
+        if(pendingGenderEdits[id] === next) delete pendingGenderEdits[id];
+        lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+        renderAll();
+      } catch(err){
+        alert('性別表示の変更に失敗しました: ' + (err.message || err));
+        renderAll();
+      }
+    });
+  });
+
+  body.querySelectorAll('.store-transfer-select').forEach(sel => {
+    let handled = false;
+    sel.addEventListener('change', async () => {
+      handled = true;
+      const id = sel.dataset.id;
+      const prevStore = sel.dataset.prev;
+      const newStore = sel.value;
+      transferringId = null;
+      if(newStore === prevStore){ renderTable(computeAll()); return; }
+      if(!isConnected()){ alert('先に「接続設定」からGoogleスプレッドシートと連携してください'); renderTable(computeAll()); return; }
+      pendingStoreEdits[id] = newStore; // protect against a concurrent edit's response landing first
+      const person = people.find(p => p.id === id);
+      if(person) person.store = newStore; 
+      renderAll();
+      try {
+        const state = await apiCall('setStore', { personId: id, store: newStore });
+        applyServerState(state);
+        if(pendingStoreEdits[id] === newStore) delete pendingStoreEdits[id];
+        lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+        renderAll();
+      } catch(err){
+        alert('店舗異動に失敗しました: ' + (err.message || err));
+        renderAll();
+      }
+    });
+    
+    
+    sel.addEventListener('blur', () => {
+      if(handled) return;
+      if(transferringId === sel.dataset.id){ transferringId = null; renderTable(computeAll()); }
+    });
+    sel.focus();
+  });
+
+  body.querySelectorAll('.role-cell-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      editingRoleId = btn.dataset.id;
+      renderTable(computeAll());
+    });
+  });
+
+  body.querySelectorAll('.role-edit-select').forEach(sel => {
+    let handled = false;
+    sel.addEventListener('change', async () => {
+      handled = true;
+      const id = sel.dataset.id;
+      const prevRole = sel.dataset.prev;
+      const newRole = sel.value;
+      editingRoleId = null;
+      if(newRole === prevRole){ renderTable(computeAll()); return; }
+      if(!isConnected()){ alert('先に「接続設定」からGoogleスプレッドシートと連携してください'); renderTable(computeAll()); return; }
+      pendingRoleEdits[id] = newRole; 
+      const person = people.find(p => p.id === id);
+      if(person) person.role = newRole; 
+      renderAll();
+      try {
+        const state = await apiCall('setRole', { personId: id, role: newRole });
+        applyServerState(state);
+        if(pendingRoleEdits[id] === newRole) delete pendingRoleEdits[id];
+        lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+        renderAll();
+      } catch(err){
+        alert('役職の変更に失敗しました: ' + (err.message || err));
+        renderAll();
+      }
+    });
+    
+    
+    sel.addEventListener('blur', () => {
+      if(handled) return;
+      if(editingRoleId === sel.dataset.id){ editingRoleId = null; renderTable(computeAll()); }
+    });
+    sel.focus();
+  });
+
+  body.querySelectorAll('.row-delete[data-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      if(!confirm(`「${btn.dataset.name}」を名簿から削除します。過去の入力データも含めて表示されなくなります。よろしいですか?`)) return;
+      if(!isConnected()){ alert('先に「接続設定」からGoogleスプレッドシートと連携してください'); return; }
+      try {
+        const state = await apiCall('deletePerson', { personId: id });
+        applyServerState(state);
+        expandedIds.delete(id);
+        lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+        renderAll();
+      } catch(err){
+        alert('削除に失敗しました: ' + (err.message || err));
+      }
+    });
+  });
+}
+
+function renderStoreSelect(){
+  const sel = document.getElementById('newStore');
+  sel.innerHTML = APP_DATA.storeOrder.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+const ROLE_OPTIONS = ['お客様店長','お客様店長代理','主任','社員','キャスト','クリーンスタッフ','パート'];
+function renderRoleSelect(){
+  const sel = document.getElementById('newRole');
+  sel.innerHTML = ROLE_OPTIONS.map(r=>`<option value="${r}">${r}</option>`).join('');
+}
+
+
+let groupModalOpen = false;
+let editingGroupId = null; 
+let groupMemberFilter = '';
+
+async function refreshGroups(){
+  if(!isConnected()){ renderAll(); if(groupModalOpen) renderGroupModal(); return; }
+  try {
+    const state = await apiCall('saveGroups', { groups });
+    applyServerState(state);
+    lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+  } catch(err){
+    connectionError = String(err.message || err); renderSyncStatus();
+  }
+  renderAll();
+  if(groupModalOpen) renderGroupModal();
+}
+
+
+
+
+
+
+
+let groupSaveTimer = null;
+function debouncedSaveGroups(){
+  if(!isConnected()) return;
+  if(groupSaveTimer) clearTimeout(groupSaveTimer);
+  groupSaveTimer = setTimeout(async () => {
+    groupSaveTimer = null;
+    try {
+      const state = await apiCall('saveGroups', { groups });
+      applyServerState(state);
+      lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+    } catch(err){
+      connectionError = String(err.message || err); renderSyncStatus();
+    }
+    const active = document.activeElement;
+    if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT')) return;
+    renderAll();
+    if(groupModalOpen) renderGroupModal();
+  }, 600);
+}
+
+function renderGroupModal(){
+  const overlay = document.getElementById('groupModalOverlay');
+  overlay.style.display = groupModalOpen ? 'flex' : 'none';
+  if(!groupModalOpen) return;
+
+  const body = document.getElementById('groupModalBody');
+  
+  
+  const prevMemberList = body.querySelector('.group-member-list');
+  const prevMemberScroll = prevMemberList ? prevMemberList.scrollTop : 0;
+  const prevOverlayScroll = overlay.scrollTop;
+  const filterLower = groupMemberFilter.trim().toLowerCase();
+
+  body.innerHTML = groups.length ? groups.map((g,i) => {
+    const color = `var(${groupColorVar(i)})`;
+    const isOpen = editingGroupId === g.id;
+    let checklist = '';
+    if(isOpen){
+      const storeBlocks = APP_DATA.storeOrder.map(store => {
+        const rows = people
+          .filter(p => p.store === store && (!filterLower || p.name.toLowerCase().includes(filterLower)))
+          .sort((a,b) => a.name.localeCompare(b.name, 'ja'));
+        if(!rows.length) return '';
+        return `<div class="group-member-store">${store}</div>` + rows.map(p => `
+          <label class="group-member-row">
+            <input type="checkbox" data-group="${g.id}" data-person="${p.id}" ${g.memberIds.includes(p.id) ? 'checked' : ''}>
+            <span>${p.name}</span>
+            <span class="foot-note" style="margin-left:auto;">${p.role||''}</span>
+          </label>`).join('');
+      }).join('');
+      checklist = `
+        <div class="group-member-filter">
+          <input type="text" id="groupFilterInput" placeholder="氏名で絞り込み" value="${groupMemberFilter.replace(/"/g,'&quot;')}">
+        </div>
+        <div class="group-member-list">${storeBlocks || '<p class="foot-note">該当する従業員がいません</p>'}</div>`;
+    }
+    return `
+      <div class="group-card-edit">
+        <div class="group-card-head" data-toggle="${g.id}">
+          <span class="swatch" style="background:${color}"></span>
+          <input type="text" class="group-name-input" data-rename="${g.id}" value="${g.name.replace(/"/g,'&quot;')}">
+          <span class="foot-note">${g.memberIds.length}名</span>
+          <button class="row-delete" data-delete-group="${g.id}" title="グループを削除">✕</button>
+          <span class="hist-caret">${isOpen ? '▾' : '▸'}</span>
+        </div>
+        ${checklist}
+      </div>`;
+  }).join('') : `<p class="foot-note">まだグループがありません。下の欄から追加してください。</p>`;
+
+  const newMemberList = body.querySelector('.group-member-list');
+  if(newMemberList) newMemberList.scrollTop = prevMemberScroll;
+  overlay.scrollTop = prevOverlayScroll;
+
+  body.querySelectorAll('[data-toggle]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if(e.target.closest('.group-name-input') || e.target.closest('.row-delete')) return;
+      const id = el.dataset.toggle;
+      editingGroupId = editingGroupId === id ? null : id;
+      groupMemberFilter = '';
+      renderGroupModal();
+    });
+  });
+  body.querySelectorAll('.group-name-input').forEach(inp => {
+    inp.addEventListener('click', e => e.stopPropagation());
+    inp.addEventListener('input', () => {
+      const g = groups.find(x => x.id === inp.dataset.rename);
+      if(g){ g.name = inp.value; debouncedSaveGroups(); }
+    });
+  });
+  body.querySelectorAll('[data-delete-group]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.deleteGroup;
+      const g = groups.find(x => x.id === id);
+      if(!confirm(`グループ「${g ? g.name : ''}」を削除します。よろしいですか?`)) return;
+      groups = groups.filter(x => x.id !== id);
+      if(editingGroupId === id) editingGroupId = null;
+      refreshGroups();
+    });
+  });
+  body.querySelectorAll('.group-member-row input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const g = groups.find(x => x.id === cb.dataset.group);
+      if(!g) return;
+      const pid = cb.dataset.person;
+      if(cb.checked){ if(!g.memberIds.includes(pid)) g.memberIds.push(pid); }
+      else { g.memberIds = g.memberIds.filter(x => x !== pid); }
+      refreshGroups();
+    });
+  });
+  const filterInput = document.getElementById('groupFilterInput');
+  if(filterInput){
+    filterInput.addEventListener('input', () => {
+      groupMemberFilter = filterInput.value;
+      renderGroupModal();
+      const again = document.getElementById('groupFilterInput');
+      if(again){ again.focus(); const v = again.value; again.value = ''; again.value = v; }
+    });
+  }
+}
+
+function openGroupModal(){ groupModalOpen = true; renderGroupModal(); }
+function closeGroupModal(){ groupModalOpen = false; editingGroupId = null; renderGroupModal(); }
+
+document.getElementById('groupCompareSelect').addEventListener('change', (e) => {
+  groupCompareLabel = e.target.value;
+  localStorage.setItem('bonusdash_group_compare_period', groupCompareLabel);
+  renderAll();
+});
+document.getElementById('btnGroupSettings').addEventListener('click', openGroupModal);
+document.getElementById('groupModalClose').addEventListener('click', closeGroupModal);
+document.getElementById('groupModalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'groupModalOverlay') closeGroupModal();
+});
+document.getElementById('btnAddGroup').addEventListener('click', () => {
+  const nameInput = document.getElementById('newGroupName');
+  const name = nameInput.value.trim();
+  if(!name){ alert('グループ名を入力してください'); return; }
+  const g = { id: 'g' + Date.now(), name, memberIds: [] };
+  groups.push(g);
+  editingGroupId = g.id;
+  nameInput.value = '';
+  refreshGroups();
+});
+
+function renderAll(){
+  const stats = computeAll();
+  renderControls(stats);
+  renderKpi(stats);
+  renderStoreCards(stats);
+  renderBarChart(stats);
+  renderGroupSection(stats);
+  renderTrendChart(stats);
+  renderTable(stats);
+}
+
+// ---------- controls wiring ----------
+document.getElementById('btnAddPerson').addEventListener('click', async () => {
+  const name = document.getElementById('newName').value.trim();
+  const store = document.getElementById('newStore').value;
+  const role = document.getElementById('newRole').value;
+  const amountRaw = document.getElementById('newAmount').value.replace(/[,\s]/g,'');
+  if(!name){ alert('氏名を入力してください'); return; }
+  if(!isConnected()){ alert('先に「接続設定」からGoogleスプレッドシートと連携してください'); return; }
+  try {
+    let state = await apiCall('addPerson', { name, store, role });
+    applyServerState(state);
+    const newId = state.newPersonId;
+    if(newId && amountRaw !== '' && !isNaN(Number(amountRaw))){
+      const person = people.find(p => p.id === newId);
+      if(person) person.amounts[currentPeriod] = Number(amountRaw);
+      state = await apiCall('setAmount', { personId: newId, period: currentPeriod, value: Number(amountRaw) });
+      applyServerState(state);
+    }
+    document.getElementById('newName').value = '';
+    document.getElementById('newAmount').value = '';
+    lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+    renderAll();
+  } catch(err){
+    alert('追加に失敗しました: ' + (err.message || err));
+  }
+});
+
+function toCsv(){
+  const header = ['ID','所属','役職','氏名', ...APP_DATA.periods, `${currentPeriod}(今回)`];
+  const lines = [header.join(',')];
+  APP_DATA.storeOrder.forEach(store => {
+    people.filter(p=>p.store===store).forEach(p => {
+      const hist = APP_DATA.periods.map(per => p.amounts[per] ?? '');
+      const cur = p.amounts[currentPeriod] ?? '';
+      lines.push([p.id, p.storeRaw, p.role||'', p.name, ...hist, cur].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+    });
+  });
+  return '﻿' + lines.join('\r\n');
+}
+
+// ---------- meeting PDF export (print-to-PDF) ----------
+// Builds #printReport fresh from whatever is currently on screen (stats +
+// the already-drawn chart SVGs, just cloned rather than redrawn) right
+// before window.print() -- @media print then hides everything else and
+// shows only this, one <section class="print-page"> per printed page.
+// clones an existing live element for reuse inside #printReport -- stripped
+// of its id so the document doesn't end up with duplicate ids once both the
+// original and the print copy exist at the same time.
+function cloneForPrint(elId){
+  const el = document.getElementById(elId).cloneNode(true);
+  el.removeAttribute('id');
+  return el;
+}
+
+function buildPrintReport(){
+  const stats = computeAll();
+  const genAt = new Date().toLocaleString('ja-JP');
+
+  const kpiClone = cloneForPrint('kpiGrid');
+  const storeClone = cloneForPrint('storeGrid');
+  const barChartClone = cloneForPrint('barChart');
+  const barLegendClone = cloneForPrint('barLegend');
+  const page1 = `
+    <section class="print-page">
+      <h2 class="print-title">賞与総額 ダッシュボード(${currentPeriod})</h2>
+      <p class="print-sub">出力日時: ${genAt}</p>
+      ${kpiClone.outerHTML}
+      ${storeClone.outerHTML}
+      <h3 class="print-section-title">店舗別 前年同期比</h3>
+      ${barLegendClone.outerHTML}
+      ${barChartClone.outerHTML}
+    </section>`;
+
+  let page2;
+  if(!stats.groupList.length){
+    page2 = `
+      <section class="print-page">
+        <h2 class="print-title">グループ別比較</h2>
+        <p class="print-sub">グループが設定されていません。</p>
+      </section>`;
+  } else {
+    const groupGridClone = cloneForPrint('groupGrid');
+    const groupLegendClone = cloneForPrint('groupBarLegend');
+    const groupChartClone = cloneForPrint('groupBarChart');
+    page2 = `
+      <section class="print-page">
+        <h2 class="print-title">グループ別比較(比較対象: ${groupCompareLabel})</h2>
+        ${groupGridClone.outerHTML}
+        ${groupLegendClone.outerHTML}
+        ${groupChartClone.outerHTML}
+      </section>`;
+  }
+
+  const trendChartClone = cloneForPrint('trendChart');
+  const trendLegendClone = cloneForPrint('trendLegend');
+  const page3 = `
+    <section class="print-page">
+      <h2 class="print-title">店舗合計の推移(2022夏〜${currentPeriod})</h2>
+      ${trendLegendClone.outerHTML}
+      ${trendChartClone.outerHTML}
+    </section>`;
+
+  const personPages = APP_DATA.storeOrder.map(store => {
+    const rows = stats.perPerson
+      .filter(r => r.person.store === store)
+      .sort((a,b) => {
+        const d = roleRank(a.person.role) - roleRank(b.person.role);
+        return d !== 0 ? d : a.person.name.localeCompare(b.person.name, 'ja');
+      });
+    if(!rows.length) return '';
+    const trs = rows.map(r => {
+      const cls = rateClass(r.rate);
+      const diffVal = (r.input !== null && r.prior !== null) ? (r.input - r.prior) : null;
+      const diff = diffVal !== null ? fmtYen(diffVal) : '-';
+      const diffClasses = ['col-highlight'];
+      if(diffVal !== null && diffVal < 0) diffClasses.push('diff-negative');
+      const rate = r.input === null ? '-' : (r.prior ? `${rateIcon(cls)} ${fmtPct(r.rate)}` : '新規/比較なし');
+      const gVar = genderColorVar(r.person.gender || '');
+      const nameStyle = gVar ? ` style="color:var(${gVar});"` : '';
+      return `<tr>
+        <td${nameStyle}>${r.person.name}</td>
+        <td>${r.person.role||'-'}</td>
+        <td>${fmtYen(r.prior)}</td>
+        <td>${fmtYen(r.ref2)}</td>
+        <td class="col-highlight">${r.input===null?'未入力':fmtYen(r.input)}</td>
+        <td class="${diffClasses.join(' ')}">${diff}</td>
+        <td>${rate}</td>
+      </tr>`;
+    }).join('');
+    return `
+      <section class="print-page">
+        <h2 class="print-title">${store} - 個人別入力一覧(${currentPeriod})</h2>
+        <table class="print-table">
+          <thead><tr>
+            <th>氏名</th><th>役職</th><th>${stats.compareLabel||'前年同期'}</th><th>${stats.ref2Label||'前回'}</th><th class="col-highlight">${currentPeriod}</th><th class="col-highlight">差額</th><th>上昇率</th>
+          </tr></thead>
+          <tbody>${trs}</tbody>
+        </table>
+      </section>`;
+  }).join('');
+
+  document.getElementById('printReport').innerHTML = page1 + page2 + page3 + personPages;
+}
+
+document.getElementById('btnPrintReport').addEventListener('click', () => {
+  buildPrintReport();
+  window.print();
+});
+
+document.getElementById('btnCsv').addEventListener('click', () => {
+  const blob = new Blob([toCsv()], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `賞与推移_${currentPeriod}.csv`;
+  a.click();
+});
+
+// Minimal RFC4180-ish CSV line splitter (handles quoted fields with embedded
+// commas/quotes) -- enough for the file this same app exports and for a
+// straightforward Excel save-as-CSV of it.
+function parseCsv(text){
+  text = text.replace(/^﻿/, '');
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0; i<text.length; i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; } else { inQuotes = false; }
+      } else field += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\n' || c === '\r'){
+        if(c === '\r' && text[i+1] === '\n') i++;
+        row.push(field); field = '';
+        if(row.length > 1 || row[0] !== ''){ rows.push(row); }
+        row = [];
+      } else field += c;
+    }
+  }
+  if(field !== '' || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+document.getElementById('btnLoadCsv').addEventListener('click', () => {
+  document.getElementById('csvFileInput').click();
+});
+document.getElementById('csvFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!isConnected()){ alert('先に「接続設定」からGoogleスプレッドシートと連携してください'); return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const btn = document.getElementById('btnLoadCsv');
+    try {
+      const rows = parseCsv(reader.result);
+      if(rows.length < 2){ alert('CSVにデータ行がありません'); return; }
+      const header = rows[0];
+      const idCol = header.indexOf('ID');
+      const nameCol = header.indexOf('氏名');
+      const lastCol = header.length - 1; // "◯◯◯◯(今回)" column, whatever it's labeled
+      const updates = [];
+      let skipped = 0;
+      rows.slice(1).forEach(r => {
+        if(!r.length) return;
+        const idVal = idCol >= 0 ? r[idCol] : '';
+        const nameVal = nameCol >= 0 ? r[nameCol] : '';
+        let person = idVal ? people.find(p => p.id === idVal) : null;
+        if(!person && nameVal) person = people.find(p => p.name === nameVal);
+        if(!person){ skipped++; return; }
+        const raw = (r[lastCol] || '').replace(/[,\s]/g,'');
+        if(raw === '') return;
+        if(isNaN(Number(raw))){ skipped++; return; }
+        updates.push({ person, value: Number(raw) });
+      });
+      if(!updates.length){ alert(`反映できる行がありませんでした${skipped ? `(一致しなかった行: ${skipped}件)` : ''}`); return; }
+      if(!confirm(`${updates.length}件を${currentPeriod}に反映します(共有スプレッドシートに書き込みます)。よろしいですか?`)) return;
+      const origLabel = btn.textContent;
+      let applied = 0, failed = 0;
+      for(const u of updates){
+        btn.textContent = `取り込み中... (${applied+failed}/${updates.length})`;
+        try {
+          u.person.amounts[currentPeriod] = u.value;
+          const state = await apiCall('setAmount', { personId: u.person.id, period: currentPeriod, value: u.value });
+          applyServerState(state);
+          applied++;
+        } catch(err){ failed++; }
+      }
+      btn.textContent = origLabel;
+      lastSyncedAt = new Date(); connectionError = null; renderSyncStatus();
+      renderAll();
+      alert(`CSVから${applied}件反映しました${(skipped||failed) ? `(未一致: ${skipped}件, 保存失敗: ${failed}件)` : ''}`);
+    } catch(err){ alert('CSVの読み込みに失敗しました: ' + err.message); }
+  };
+  reader.readAsText(file);
+});
+
+// ---------- サーバーとの接続 ----------
+// 管理画面に組み込んだ版：管理画面からログイン券を受け取り、査定システムのサーバー（adminBonus）を呼ぶ。
+// 合言葉（secret）やURLの手入力（接続設定）は使わない。
+function isConnected(){ return !!TOKEN; }
+// 査定システムのサーバーへ（ログイン券つき）。券が切れたら管理画面にログインし直してもらう
+async function apiCall(action, params){
+  if(!TOKEN) throw new Error('未接続です');
+  let d;
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: 'adminBonus', args: [TOKEN, action, params || {}] }) });
+    d = await res.json();
+  } catch(e){ throw new Error('サーバーと通信できませんでした。電波の良いところで、もう一度お試しください'); }
+  if(!d || !d.ok){
+    const msg = (d && d.error) || 'エラーが起きました';
+    if(/ログインの有効期限/.test(msg) && window.parent !== window) window.parent.postMessage({ type: 'bd-expired' }, PARENT_ORIGIN);
+    throw new Error(msg);
+  }
+  return d.result;
+}
+const PARENT_ORIGIN = /^https?:/.test(location.origin) ? location.origin : '*'; // ファイルで開いたとき（デモ・テスト）は宛先を絞れない
+
+function applyServerState(state){
+  APP_DATA.periods = state.periods;
+  APP_DATA.storeOrder = state.storeOrder;
+  APP_DATA.roleRank = state.roleRank;
+  APP_DATA.nextNewPeriod = state.nextNewPeriod;
+  people = state.people;
+  groups = state.groups;
+  // people is replaced wholesale above with whatever the server had at the
+  // time it handled *this* request -- if another cell's edit is still
+  // sitting in its own debounce window (not sent yet), that snapshot won't
+  // contain it, and without this reapply step it would silently vanish from
+  // the screen the moment this response lands. Keep reapplying any
+  // not-yet-confirmed edit until its own save actually goes through.
+  Object.keys(pendingEdits).forEach(key => {
+    const sep = key.indexOf('::');
+    const pid = key.slice(0, sep), period = key.slice(sep+2);
+    const person = people.find(p => p.id === pid);
+    if(person) person.amounts[period] = pendingEdits[key];
+  });
+  // same protection as above, for the other single-value fields that can
+  // also be mid-flight when an unrelated request's response lands.
+  Object.keys(pendingGenderEdits).forEach(pid => {
+    const person = people.find(p => p.id === pid);
+    if(person) person.gender = pendingGenderEdits[pid];
+  });
+  Object.keys(pendingStoreEdits).forEach(pid => {
+    const person = people.find(p => p.id === pid);
+    if(person) person.store = pendingStoreEdits[pid];
+  });
+  Object.keys(pendingRoleEdits).forEach(pid => {
+    const person = people.find(p => p.id === pid);
+    if(person) person.role = pendingRoleEdits[pid];
+  });
+  if(!APP_DATA.periods.includes(currentPeriod) && currentPeriod !== APP_DATA.nextNewPeriod){
+    currentPeriod = APP_DATA.nextNewPeriod;
+    localStorage.setItem('bonusdash_current_period', currentPeriod);
+  }
+}
+
+function renderSyncStatus(overrideText){
+  const el = document.getElementById('syncStatusText');
+  if(!el) return;
+  if(overrideText){ el.textContent = overrideText; return; }
+  if(!isConnected()){ el.textContent = API_URL ? '管理画面のログインを確認しています…' : '試作版（デモ）：架空の人で動きます。実際の金額は管理画面にログインすると表示されます'; return; }
+  if(connectionError){ el.textContent = `接続エラー: ${connectionError}(直前に読み込めた内容を表示中)`; return; }
+  el.textContent = lastSyncedAt ? `オンライン・自動同期中(最終同期 ${lastSyncedAt.toLocaleTimeString('ja-JP')})` : '読み込み中...';
+}
+
+const pendingSaveTimers = {};
+// personId::period -> value not yet confirmed saved. Read by applyServerState
+// so a concurrent save for a *different* cell can't clobber this one while
+// it's still mid-flight.
+const pendingEdits = {};
+// personId -> value not yet confirmed saved, for gender, store and role
+// (all single-value fields with no period, unlike amounts above).
+const pendingGenderEdits = {};
+const pendingStoreEdits = {};
+const pendingRoleEdits = {};
+function debouncedSetAmount(personId, period, value){
+  if(!isConnected()){ renderSyncStatus(); return; }
+  const key = personId + '::' + period;
+  pendingEdits[key] = value;
+  if(pendingSaveTimers[key]) clearTimeout(pendingSaveTimers[key]);
+  pendingSaveTimers[key] = setTimeout(async () => {
+    delete pendingSaveTimers[key];
+    try {
+      const state = await apiCall('setAmount', { personId, period, value });
+      applyServerState(state);
+      // only clear once confirmed -- if the user typed again while this was
+      // in flight, pendingEdits[key] now holds a newer value and must stay
+      // protected until its own (already-scheduled) save completes.
+      if(pendingEdits[key] === value) delete pendingEdits[key];
+      lastSyncedAt = new Date();
+      connectionError = null;
+      renderSyncStatus();
+      renderPeriodTabs(); // pick up a newly-created period column, if any
+      // re-render to show the merged result, but not if it would yank focus
+      // out from under someone still typing in another cell.
+      const active = document.activeElement;
+      if(!(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT'))){
+        renderAll();
+      }
+    } catch(err){
+      connectionError = String(err.message || err);
+      renderSyncStatus();
+    }
+  }, 600);
+}
+
+let pollTimer = null;
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    if(!isConnected()) return;
+    const active = document.activeElement;
+    if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT')) return; // don't yank data out from under someone typing
+    try {
+      const state = await apiCall('getState', {});
+      applyServerState(state);
+      lastSyncedAt = new Date();
+      connectionError = null;
+      renderSyncStatus();
+      renderAll();
+    } catch(err){
+      connectionError = String(err.message || err);
+      renderSyncStatus();
+    }
+  }, 20000);
+}
+
+async function connectAndLoad(){
+  renderSyncStatus('接続を確認しています...');
+  try {
+    const state = await apiCall('getState', {});
+    applyServerState(state);
+    lastSyncedAt = new Date();
+    connectionError = null;
+    renderStoreSelect();
+    renderRoleSelect();
+    renderAll();
+    startPolling();
+    return true;
+  } catch(err){
+    connectionError = String(err.message || err);
+    renderSyncStatus();
+    renderAll();
+    return false;
+  }
+}
+
+function openConnectionModal(){
+  document.getElementById('connUrlInput').value = apiUrl();
+  document.getElementById('connSecretInput').value = apiSecret();
+  document.getElementById('connModalOverlay').style.display = 'flex';
+}
+function closeConnectionModal(){
+  document.getElementById('connModalOverlay').style.display = 'none';
+}
+document.getElementById('btnConnectionSettings').addEventListener('click', openConnectionModal);
+document.getElementById('connModalClose').addEventListener('click', closeConnectionModal);
+document.getElementById('connModalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'connModalOverlay') closeConnectionModal();
+});
+document.getElementById('btnConnSave').addEventListener('click', async () => {
+  const url = document.getElementById('connUrlInput').value.trim();
+  const secret = document.getElementById('connSecretInput').value.trim();
+  if(!url || !secret){ alert('URLと合言葉の両方を入力してください'); return; }
+  localStorage.setItem('bonusdash_api_url', url);
+  localStorage.setItem('bonusdash_api_secret', secret);
+  closeConnectionModal();
+  const ok = await connectAndLoad();
+  if(!ok){
+    alert('接続に失敗しました: ' + connectionError + '\n\nURL・合言葉、またはApps Script側のデプロイ設定(アクセスできるユーザー)を確認してください。');
+  }
+});
+document.getElementById('btnConnClear').addEventListener('click', () => {
+  if(!confirm('接続設定を解除します。よろしいですか?(スプレッドシート側のデータは消えません)')) return;
+  localStorage.removeItem('bonusdash_api_url');
+  localStorage.removeItem('bonusdash_api_secret');
+  if(pollTimer) clearInterval(pollTimer);
+  connectionError = null;
+  closeConnectionModal();
+  renderSyncStatus();
+  renderAll();
+});
+
+let lastSyncedAt = null;
+let connectionError = null;
+
+renderStoreSelect();
+renderRoleSelect();
+renderAll();
+renderSyncStatus();
+// 管理画面から、ログイン券を受け取ってから読み込む（券は端末に保存しない）
+window.addEventListener('message', e => {
+  if(e.source !== window.parent) return;
+  const m = e.data || {};
+  if(m.type === 'bd-token' && m.token && API_URL){ TOKEN = m.token; connectAndLoad(); }
+});
+if(window.parent !== window) window.parent.postMessage({ type: 'bd-ready' }, PARENT_ORIGIN);
+window.__mainOk = true;
+</script>

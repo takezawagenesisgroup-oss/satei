@@ -162,6 +162,10 @@
   .rp-head .small{margin-left:auto}
   #poster{display:none}
   .chk div{margin:4px 0;line-height:1.5}
+  #bdLayer{position:fixed;inset:0;z-index:50;background:#fff;display:flex;flex-direction:column}
+  #bdLayer.hidden{display:none}
+  .bd-bar{display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--navy,#1e2a44);color:#fff}
+  #bdFrame{flex:1;border:0;width:100%}
   ul.gd{list-style:none;padding:0;margin:4px 0}
   ul.gd li{border-top:1px solid var(--line,#e5e7eb);padding:8px 0}
   .gd-h{display:flex;gap:8px;align-items:baseline;font-size:13px}.gd-h span{color:#6b7280}
@@ -210,6 +214,8 @@
   <button class="back" id="acctBtn" type="button">アカウント</button>
 </header>
 <div id="poster"></div>
+<!-- 賞与ダッシュボード（bonus.html）を管理画面の上に重ねて開く。ログイン券は postMessage で渡す（端末には保存しない） -->
+<div id="bdLayer" class="hidden"><div class="bd-bar"><button class="back" id="bdClose" type="button">‹ 管理画面に戻る</button><b>賞与ダッシュボード</b></div><iframe id="bdFrame" title="賞与ダッシュボード"></iframe></div>
 <div class="wrap" id="app">
   <div class="login" id="login">
     <h2>管理画面</h2>
@@ -327,6 +333,9 @@ function loginGoogle(cred){
 }
 function showLogin(msg){
   TOKEN=""; ME=null; S.person=null; S.overview=null;
+  // 賞与ダッシュボードの中身（金額）も消す
+  const bf=$("bdFrame"); if(bf&&bf.getAttribute("src")){ const nf=bf.cloneNode(false); nf.removeAttribute("src"); bf.replaceWith(nf); }
+  $("bdLayer").classList.add("hidden"); document.body.style.overflow="";
   $("hdr").classList.add("hidden"); $("app").innerHTML=LOGIN_HTML; bindLogin();
   if(msg) $("loginErr").textContent=msg;
 }
@@ -427,7 +436,7 @@ function renderOverview(){
   const stBadge=p=>`<span class="st ${p.status==="提出済"?"done":p.status==="入力中"?"wip":"none"}">${esc(p.status)}</span>`;
   let h=LIVE?"":`<div class="demo">試作版（デモデータ）です。人をタップすると個人カルテが開きます。AI分析・面談要約は試作用の簡易版で動きます。</div>`;
   if(r.trial) h+=`<div class="demo"><b>試験運転中</b>です。表示されているのはテスト用のデータです。本番の前に、この画面の下の「試験運転を終える」（またはスプレッドシートのメニュー「賞与査定 → 試験運転を終える」）を実行してください。</div>`;
-  h+=`<div class="rp-bar"><button class="btn sub" id="rpOpen" type="button">📋 店舗別レポート（会議用）</button></div>`;
+  h+=`<div class="rp-bar"><button class="btn sub" id="rpOpen" type="button">📋 店舗別レポート（会議用）</button><button class="btn sub" id="bdOpen" type="button">💴 賞与ダッシュボード（金額の入力）</button></div>`;
   h+=`<div class="tabs">${STORES.map(s=>`<button type="button" class="tab ${s===S.store?"active":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>`;
   h+=`<div class="sec"><h3>${esc(S.store)}<span class="sub">${esc(r.period)}｜全体の提出 ${sub}/${r.people.length}人${wip?`（入力中 ${wip}人）`:""}</span></h3>
     <div class="legend" style="margin-bottom:6px"><span>バー：★★★〜☆☆☆（他者評価の平均）</span><span>数字：総合平均と100点換算</span><span>右端：最終評価</span></div>`;
@@ -466,7 +475,23 @@ function renderOverview(){
   document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{S.store=b.dataset.s;renderOverview();});
   document.querySelectorAll(".prow").forEach(el=>el.onclick=()=>openPerson(el.dataset.n));
   $("rpOpen").onclick=openReport;
+  $("bdOpen").onclick=openBonusDash;
 }
+
+/* 賞与ダッシュボード（管理画面に組み込み）。入口を増やさないよう、別のURLではなくここから開く */
+function openBonusDash(){
+  if(isGAS){ alert("賞与ダッシュボードは、新しいURLの管理画面（入力フォームの「管理者の方はこちら」）から開けます。"); return; }
+  const f=$("bdFrame"); $("bdLayer").classList.remove("hidden"); document.body.style.overflow="hidden";
+  if(!f.getAttribute("src")) f.setAttribute("src","bonus.html");
+  else if(f.contentWindow) f.contentWindow.postMessage({type:"bd-token",token:TOKEN},/^https?:/.test(location.origin)?location.origin:"*");
+}
+$("bdClose").onclick=()=>{$("bdLayer").classList.add("hidden"); document.body.style.overflow="";};
+window.addEventListener("message",e=>{
+  const f=$("bdFrame"); if(!f||e.source!==f.contentWindow) return;
+  const m=e.data||{};
+  if(m.type==="bd-ready") f.contentWindow.postMessage({type:"bd-token",token:TOKEN},/^https?:/.test(location.origin)?location.origin:"*");
+  if(m.type==="bd-expired"){ $("bdLayer").classList.add("hidden"); document.body.style.overflow=""; showLogin("ログインの有効期限が切れました。もう一度ログインしてください。"); }
+});
 
 /* 試験運転・動作チェック（オーナー） */
 function bindTrial(){
