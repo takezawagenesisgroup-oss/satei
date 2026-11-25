@@ -213,11 +213,17 @@
 <div class="wrap" id="app">
   <div class="login" id="login">
     <h2>管理画面</h2>
-    <p class="small">登録されたメールアドレスとパスワードを入力してください。</p>
-    <input class="in" id="em" type="email" autocomplete="username" placeholder="メールアドレス" style="margin-bottom:8px">
-    <input class="in" id="pw" type="password" autocomplete="current-password" placeholder="パスワード">
+    <div id="gBox" class="hidden">
+      <p class="small">登録されたGoogleアカウントでログインします（パスワードは要りません）。</p>
+      <div id="gBtn" style="display:flex;justify-content:center;min-height:44px;margin:8px 0"></div>
+    </div>
+    <div id="pwBox">
+      <p class="small" id="pwLead">登録されたメールアドレスとパスワードを入力してください。</p>
+      <input class="in" id="em" type="email" autocomplete="username" placeholder="メールアドレス" style="margin-bottom:8px">
+      <input class="in" id="pw" type="password" autocomplete="current-password" placeholder="パスワード">
+      <button class="btn" id="loginBtn" type="button" style="width:100%;margin-top:12px">ログイン</button>
+    </div>
     <div class="err" id="loginErr"></div>
-    <button class="btn" id="loginBtn" type="button" style="width:100%;margin-top:12px">ログイン</button>
   </div>
 </div>
 
@@ -249,7 +255,7 @@ function callApi(fn,args){
     .then(d=>{ if(!d||!d.ok) throw new Error(d&&d.error||"エラーが起きました"); return d.result; });
 }
 function api(fn,...args){
-  const a=fn==="adminLogin"?args:[TOKEN,...args];
+  const a=/^(adminLogin|adminLoginGoogle|adminAuthConfig)$/.test(fn)?args:[TOKEN,...args];
   const p=API_URL?callApi(fn,a).then(r=>{
       // 配るURL・QRは、Googleの外に置いた入力フォーム（この管理画面と同じ場所の index.html）にする
       if(fn==="adminOverview"&&r&&r.formUrl) r.formUrl=new URL("./",location.href).href;
@@ -276,20 +282,48 @@ function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
    ログイン
    ============================================================ */
 const LOGIN_HTML=$("app").innerHTML;
+// ログインの方法（サーバーに聞く）：Googleでログイン（登録されたアカウントだけ）／パスワード
+let AUTH={googleClientId:"",passwordLogin:true};
 function bindLogin(){
   $("loginBtn").onclick=login;
   $("pw").onkeydown=e=>{if(e.key==="Enter")login()};
-  if(!LIVE){ $("em").value="owner@example.com"; $("pw").value="demo"; }
+  if(!LIVE){ $("em").value="owner@example.com"; $("pw").value="demo"; return; }
+  applyAuth();
+}
+function applyAuth(){
+  const g=!!AUTH.googleClientId;
+  $("pwBox").classList.toggle("hidden",!AUTH.passwordLogin);
+  if(g&&AUTH.passwordLogin) $("pwLead").textContent="（予備）メールアドレスとパスワードでも入れます。";
+  if(!g) return;
+  $("gBox").classList.remove("hidden");
+  // GASから配信した古いURLでは、Googleのログインが使えない（許可した場所ではないため）
+  if(isGAS){ $("gBtn").innerHTML=`<p class="small">この古いURLでは「Googleでログイン」が使えません。入力フォームのURLを開き、最初の画面の「管理者の方はこちら」から入ってください。</p>`; return; }
+  const draw=()=>{ try{
+    google.accounts.id.initialize({client_id:AUTH.googleClientId,callback:r=>loginGoogle(r.credential),ux_mode:"popup",auto_select:false});
+    google.accounts.id.renderButton($("gBtn"),{theme:"outline",size:"large",text:"signin_with",shape:"pill",locale:"ja",width:280});
+  }catch(e){ $("loginErr").textContent="Googleのログインボタンを表示できませんでした："+(e.message||e); } };
+  if(window.google&&google.accounts&&google.accounts.id) return draw();
+  // Googleのログイン部品（この1つだけは外から読み込む必要がある）
+  const s=document.createElement("script"); s.src="https:\/\/accounts.google.com/gsi/client"; s.async=true; s.onload=draw;
+  s.onerror=()=>{$("loginErr").textContent="Googleのログイン部品を読み込めませんでした。電波の良いところで開き直してください";};
+  document.head.appendChild(s);
 }
 bindLogin();
+if(LIVE) api("adminAuthConfig").then(c=>{AUTH=c;applyAuth();}).catch(()=>{});
+function afterLogin(r){
+  TOKEN=r.token; ME=r.me; S.period=r.period; S.periods=r.periods; S.person=null;
+  $("hdr").classList.remove("hidden");
+  fillPeriods(); loadOverview();
+}
 function login(){
   $("loginErr").textContent="";
   $("loginBtn").disabled=true;
-  api("adminLogin",$("em").value,$("pw").value).then(r=>{
-    TOKEN=r.token; ME=r.me; S.period=r.period; S.periods=r.periods; S.person=null;
-    $("hdr").classList.remove("hidden");
-    fillPeriods(); loadOverview();
-  }).catch(e=>{$("loginErr").textContent=e.message||e;$("loginBtn").disabled=false});
+  api("adminLogin",$("em").value,$("pw").value).then(afterLogin)
+    .catch(e=>{$("loginErr").textContent=e.message||e;$("loginBtn").disabled=false});
+}
+function loginGoogle(cred){
+  $("loginErr").textContent="確認しています…";
+  api("adminLoginGoogle",cred).then(afterLogin).catch(e=>{$("loginErr").textContent=e.message||e;});
 }
 function showLogin(msg){
   TOKEN=""; ME=null; S.person=null; S.overview=null;
@@ -307,7 +341,7 @@ function openAccount(){
   let h=`<div class="sec"><h3>ログイン中<span class="sub">${esc(ME.role)}</span></h3>
     <div><b>${esc(ME.name||ME.email)}</b> <span class="small">${esc(ME.email)}</span></div>
     <button class="btn sub" id="logoutBtn" type="button" style="margin-top:10px">ログアウト</button></div>`;
-  h+=`<div class="sec"><h3>パスワードの変更</h3>
+  if(AUTH.passwordLogin) h+=`<div class="sec"><h3>パスワードの変更</h3>
     <input class="in" id="opw" type="password" autocomplete="current-password" placeholder="今のパスワード" style="margin-bottom:8px">
     <input class="in" id="npw" type="password" autocomplete="new-password" placeholder="新しいパスワード（8文字以上）" style="margin-bottom:8px">
     <input class="in" id="npw2" type="password" autocomplete="new-password" placeholder="新しいパスワード（もう一度）">
@@ -318,7 +352,7 @@ function openAccount(){
     <div class="two"><input class="in" id="nuEmail" type="email" placeholder="メールアドレス"><input class="in" id="nuName" placeholder="名前（例：廣田）"></div>
     <div class="cfg" style="margin-top:8px"><select class="in" id="nuRole"><option value="閲覧者">閲覧者</option><option value="オーナー">オーナー（権限も変更できる）</option></select>
     <button class="btn" id="nuBtn" type="button">追加する</button></div>
-    <div class="small" id="nuMsg" style="margin-top:6px">追加すると初期パスワードが表示されます。本人に伝え、ログイン後に「パスワードの変更」で変えてもらってください。</div></div>`;
+    <div class="small" id="nuMsg" style="margin-top:6px">${AUTH.passwordLogin?"追加すると初期パスワードが表示されます。本人に伝え、ログイン後に「パスワードの変更」で変えてもらってください。":"追加した人は、そのGoogleアカウントで「Googleでログイン」から入れます（パスワードは要りません）。メールアドレスはGoogleアカウントのものを入れてください。"}</div></div>`;
   if(owner) h+=`<div class="sec"><h3>査定期のデータをまとめて削除<span class="sub">オーナーだけ</span></h3>
     <p class="small" style="margin-top:0">選んだ査定期の<b>回答・入力状況・AI分析・面談記録・最終評価</b>をすべて削除します。試しに入力したデータを本番の前に消すときなどに使います。名簿・設定・管理画面のアカウントは消えません。<b>元に戻せません。</b></p>
     <label class="f">削除する査定期</label>
@@ -329,7 +363,7 @@ function openAccount(){
     <div class="small" id="cpMsg" style="margin-top:6px"></div></div>`;
   $("app").innerHTML=h; window.scrollTo(0,0);
   $("logoutBtn").onclick=()=>{api("adminLogout").finally(()=>showLogin());};
-  $("pwBtn").onclick=()=>{
+  if($("pwBtn")) $("pwBtn").onclick=()=>{
     if($("npw").value!==$("npw2").value){$("pwMsg").textContent="新しいパスワードが2回で違います";return;}
     const b=$("pwBtn"); b.disabled=true;
     api("adminChangePassword",$("opw").value,$("npw").value).then(()=>{b.disabled=false;
@@ -353,7 +387,7 @@ function openAccount(){
     $("users").innerHTML=us.map(u=>`<div class="prow" style="cursor:default">
       <div style="flex:1;min-width:0"><b>${esc(u.name||"（名前なし）")}</b> <span class="st ${u.role==="オーナー"?"done":"none"}">${esc(u.role)}</span>
         <div class="small" style="word-break:break-all">${esc(u.email)}｜最終ログイン ${esc(u.last||"なし")}</div></div>
-      ${u.email===ME.email?'<span class="small">あなた</span>':`<button class="btn sub" style="padding:7px 10px;font-size:12px" type="button" data-reset="${esc(u.email)}">パスワード再発行</button>
+      ${u.email===ME.email?'<span class="small">あなた</span>':`${AUTH.passwordLogin?`<button class="btn sub" style="padding:7px 10px;font-size:12px" type="button" data-reset="${esc(u.email)}">パスワード再発行</button>`:""}
       <button class="btn sub" style="padding:7px 10px;font-size:12px" type="button" data-del="${esc(u.email)}">削除</button>`}</div>`).join("");
     document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
       if(!confirm(b.dataset.del+" を削除します。この人は評価を見られなくなります。よろしいですか？"))return;
@@ -366,7 +400,7 @@ function openAccount(){
   loadUsers();
   $("nuBtn").onclick=()=>{const b=$("nuBtn"); b.disabled=true;
     api("adminAddUser",{email:$("nuEmail").value,name:$("nuName").value,role:$("nuRole").value}).then(x=>{b.disabled=false;
-      $("nuEmail").value=""; $("nuName").value=""; $("nuMsg").innerHTML="✅ 追加しました。"+showPw(x.email,x.password); loadUsers();})
+      $("nuEmail").value=""; $("nuName").value=""; $("nuMsg").innerHTML="✅ 追加しました。"+(AUTH.passwordLogin?showPw(x.email,x.password):`${esc(x.email)} のGoogleアカウントで入れます。`); loadUsers();})
       .catch(e=>{b.disabled=false;$("nuMsg").textContent=e.message||e;});};
 }
 
