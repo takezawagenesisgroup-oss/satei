@@ -198,6 +198,8 @@ const LEVELS = [
   {v:1,t:"☆",c:"w"},{v:2,t:"☆☆",c:"w"},{v:3,t:"☆☆☆",c:"w"}
 ];
 const isGAS = typeof google!=="undefined" && google.script && google.script.run;
+/* 本番（GASから配信、またはGoogleの外に置いた画面）なら true。false のときだけデモデータで動く */
+const LIVE=!!isGAS||!!(typeof window!=="undefined"&&window.GENESIS_API);
 
 /* ==================== API ==================== */
 /* 画面をGoogle以外の場所（GitHub Pagesなど）に置いたときは、ここに本番のURLが入る（tools/build-static.js）。
@@ -292,7 +294,7 @@ function render(){
   $("tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{curTab=b.dataset.s;openKey=null;render();window.scrollTo(0,0)});
   const ms=roster.members[curTab]||[];
   let h="";
-  if(!isGAS) h+=`<div class="demo">試作版です。動きを試せますが、実際にはどこにも送られません。</div>`;
+  if(!LIVE) h+=`<div class="demo">試作版です。動きを試せますが、実際にはどこにも送られません。</div>`;
   h+= curTab===myStore
     ? `<div class="note">自分の店舗の人（自分自身を含む）を評価してください。<b>よく分からない人は飛ばしても送信できます。</b>評価する人は3項目すべて選んでください。コメントは任意です。</div>`
     : `<div class="note">他部署の評価は<b>任意</b>です。評価する人だけ入力してください（3項目すべて）。</div>`;
@@ -415,7 +417,7 @@ $("cfYes").onclick=()=>{
   api("submitEvaluation",PASS,{evaluator:me,evaluatorStore:myStore,entries},CODE).then(()=>{
     $("ovConfirm").classList.remove("show"); busy(yes,false,"送信する");
     const n=entries.length, who=me; dirty=false;
-    quit("送信しました",`${esc(who)} さん、ご協力ありがとうございました。<br>${n}人分の評価を受け付けました。<br><br>🔒 入力内容はロックされました。${isGAS?"":'<br><span style="color:#8a4b00">（試作版のため実際には送信されていません）</span>'}`);
+    quit("送信しました",`${esc(who)} さん、ご協力ありがとうございました。<br>${n}人分の評価を受け付けました。<br><br>🔒 入力内容はロックされました。${LIVE?"":'<br><span style="color:#8a4b00">（試作版のため実際には送信されていません）</span>'}`);
     $("main").querySelector(".big").textContent="✅";
   }).catch(e=>{
     busy(yes,false,"送信する");
@@ -431,7 +433,7 @@ function toast(msg){
 
 /* ==================== デモ（GASでは使われません） ==================== */
 const DEMO=(()=>{
-  if(isGAS) return null;
+  if(LIVE) return null;
   const PASSWORD="genesis";
   $("demoHint").innerHTML=`試作版の合言葉：<b>${PASSWORD}</b>`;
   const roles=["店長","副店長","主任","主任","リーダー","リーダー","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ","スタッフ"];
