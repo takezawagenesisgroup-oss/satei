@@ -162,6 +162,11 @@
   .rp-head .small{margin-left:auto}
   #poster{display:none}
   .chk div{margin:4px 0;line-height:1.5}
+  ul.gd{list-style:none;padding:0;margin:4px 0}
+  ul.gd li{border-top:1px solid var(--line,#e5e7eb);padding:8px 0}
+  .gd-h{display:flex;gap:8px;align-items:baseline;font-size:13px}.gd-h span{color:#6b7280}
+  .gd-h .lnk{margin-left:auto;background:none;border:0;color:#b42318;font-size:12px;padding:2px 4px;cursor:pointer}
+  .gd-t{white-space:pre-wrap;line-height:1.6;margin-top:2px}
   .hidden{display:none!important}
   /* 印刷（面談で紙・PDFにして使う） */
   @page land{size:A4 landscape;margin:9mm}
@@ -408,12 +413,14 @@ function renderOverview(){
     <button class="btn" id="ppBtn" type="button" style="margin-top:10px">保存する</button>
     <div class="small" id="ppMsg" style="margin-top:6px">期間外は合言葉が合っていても入れません（入力途中の人の一時保存・送信も止まります）。日付を空欄にすると制限なし。合言葉は査定のたびに変えるのがおすすめです。</div></div>`;
   h+=`<div class="sec" id="qrSec"><h3>配布用QRコード<span class="sub">従業員用の入力フォーム</span></h3>${qrHtml(r)}</div>`;
+  h+=gdImportHtml();
   const owner=ME&&ME.role==="オーナー";
   if(owner) h+=`<div class="sec"><h3>試験運転・動作チェック<span class="sub">オーナーのみ</span></h3>
     <div class="cfg">${r.trial?`<button class="btn" id="trEnd" type="button">試験運転を終える（テストのデータを消す）</button>`
       :`<button class="btn sub" id="trStart" type="button">試験運転を始める</button>`}<button class="btn sub" id="chkBtn" type="button">動作チェック</button></div>
     <div class="small" id="trMsg" style="margin-top:6px">スプレッドシートのメニュー「賞与査定」と同じ操作です。スマホからもできます。</div></div>`;
   $("app").innerHTML=h;
+  bindGdImport();
   if(owner) bindTrial();
   bindQR(r);
   $("ppBtn").onclick=()=>{const b=$("ppBtn");b.disabled=true;
@@ -493,11 +500,14 @@ function renderPerson(p){
   /* 面談 */
   h+=`<div class="sec" id="ivSec">${ivHtml(p)}</div>`;
 
+  /* これまでの指導記録 */
+  h+=`<div class="sec" id="gdSec">${gdHtml(p)}</div>`;
+
   /* 最終評価 */
   h+=`<div class="sec" id="finSec">${finHtml(p)}</div>`;
 
   $("app").innerHTML=h;
-  bindAI(); bindIV(); bindFin();
+  bindAI(); bindIV(); bindGD(); bindFin();
   $("printBtn").onclick=printKarte;
   const ub=$("ulBtn");
   if(ub) ub.onclick=()=>{ub.disabled=true;
@@ -530,6 +540,7 @@ function aiHtml(p){
     <div class="h4">⚠️ 改善が必要な部分</div>${li(a.bad,"bad")}
     ${a.gap?`<div class="h4">自己評価とのギャップ</div><div>${esc(a.gap)}</div>`:""}
     ${a.followup?`<div class="h4">前回の指導からの変化</div><div>${esc(a.followup)}</div>`:""}
+    ${a.history?`<div class="h4">📚 これまでの指導を踏まえて</div><div>${esc(a.history)}</div>`:""}
     ${a.position?`<div class="h4">店舗内での位置・推移</div><div>${esc(a.position)}</div>`:""}
     <div class="h4">💡 今後どうしたらいいか</div><ol class="adv">${(a.advice||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
     <div class="h4">🗣 面談で聞くとよいこと</div><ul class="adv" style="padding-left:20px;margin:4px 0">${(a.interview_points||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
@@ -941,6 +952,50 @@ function bindIV(){
   };
 }
 
+/* これまでの指導記録（この仕組みより前からの指導の経緯。AI分析で読む） */
+function gdHtml(p){
+  const list=p.guidance||[];
+  let h=`<h3>これまでの指導記録<span class="sub">${list.length}件｜AI分析で参考にします</span></h3>`;
+  h+=list.length?`<ul class="gd">${list.map(g=>`<li><div class="gd-h"><b>${esc(g.when||"時期不明")}</b>${g.by?`<span>${esc(g.by)}</span>`:""}<button class="lnk" type="button" data-gd="${esc(g.id)}">削除</button></div><div class="gd-t">${esc(g.text)}</div></li>`).join("")}</ul>`
+    :`<p class="small">まだありません。これまでに指導してきた内容を入れておくと、AI分析がその経緯を踏まえて考えます。</p>`;
+  h+=`<details style="margin-top:8px"><summary class="small">＋ 1件追加する</summary>
+    <div class="two"><div><label class="f">時期</label><input class="in" id="gdWhen" placeholder="例：2025年12月"></div>
+    <div><label class="f">指導者</label><input class="in" id="gdBy" value="${esc(lsGet("ivBy")||"")}" placeholder="例：竹澤"></div></div>
+    <label class="f">指導内容</label><textarea class="in" id="gdText" placeholder="例）忙しい時間帯に呼び出しランプへの対応が遅れる。手を止めて先に向かうよう指導。"></textarea>
+    <div style="margin-top:8px"><button class="btn sub" id="gdBtn" type="button">追加する</button><div class="err" id="gdErr"></div></div></details>`;
+  return h;
+}
+function bindGD(){
+  const redraw=g=>{S.p.guidance=g.guidance;$("gdSec").innerHTML=gdHtml(S.p);bindGD();};
+  $("gdBtn").onclick=()=>{const t=$("gdText").value.trim(); if(!t){$("gdErr").textContent="指導内容を入力してください";return;}
+    const b=$("gdBtn"); b.disabled=true;
+    api("adminAddGuidance",{name:S.p.name,when:$("gdWhen").value,by:$("gdBy").value,text:t}).then(redraw)
+      .catch(e=>{b.disabled=false;$("gdErr").textContent=e.message||e;});};
+  document.querySelectorAll("[data-gd]").forEach(el=>el.onclick=()=>{
+    if(!confirm("この指導記録を削除します。よろしいですか？")) return;
+    api("adminDeleteGuidance",S.p.name,el.dataset.gd).then(redraw).catch(e=>alert(e.message||e));});
+}
+/* 指導記録のまとめて取り込み（一覧の下） */
+function gdImportHtml(){
+  return `<div class="sec"><h3>これまでの指導記録の取り込み<span class="sub">まとめて貼り付け</span></h3>
+    <p class="small" style="margin-top:0">従業員ごとの、これまでの指導内容を入れておくと、AI分析がその経緯を踏まえて考えます。書き方：名前の行のあとに、1行1件で「時期｜指導者｜内容」（「時期｜内容」「内容」だけでも可）。</p>
+    <textarea class="in" id="giText" style="min-height:140px" placeholder="【山田 太郎】&#10;2025年12月｜竹澤｜忙しい時間帯の声かけが減る。常連様への挨拶を最優先に&#10;2026年6月｜廣田｜後輩への指示が強い。理由を添えて伝えるよう指導&#10;&#10;【佐藤 花子】&#10;2026年3月｜竹澤｜発注ミスが続いた。ダブルチェックを徹底"></textarea>
+    <div class="cfg" style="margin-top:8px"><button class="btn sub" id="giCheck" type="button">確認する（まだ入れない）</button><button class="btn" id="giGo" type="button">取り込む</button></div>
+    <div class="small" id="giMsg" style="margin-top:6px">同じ人・同じ時期・同じ内容は二重に入りません。名簿にない名前は入れずにお知らせします。</div></div>`;
+}
+function bindGdImport(){
+  const run=dry=>{const t=$("giText").value; if(!t.trim()){$("giMsg").textContent="貼り付ける内容がありません";return;}
+    $("giCheck").disabled=$("giGo").disabled=true; $("giMsg").textContent=dry?"確認しています…":"取り込んでいます…";
+    api("adminImportGuidance",t,dry).then(x=>{$("giCheck").disabled=$("giGo").disabled=false;
+      $("giMsg").innerHTML=`${dry?"🔎 確認：":"✅ 取り込みました："}<b>${x.people}人分・${x.added}件</b>${dry?"を入れられます":""}`+
+        (x.duplicates?`<br>すでに入っている同じ記録 ${x.duplicates}件は飛ばします`:"")+
+        (x.unknown.length?`<br>⚠️ 名簿にない名前（入れません）：${esc(x.unknown.join("、"))}`:"")+
+        (x.noName?`<br>⚠️ 名前の行より前にある ${x.noName}行は、だれの記録か分からないので入れません（先頭に【名前】の行を入れてください）`:"");
+      if(!dry&&x.added) $("giText").value="";})
+      .catch(e=>{$("giCheck").disabled=$("giGo").disabled=false;$("giMsg").textContent=e.message||e;});};
+  $("giCheck").onclick=()=>run(true); $("giGo").onclick=()=>run(false);
+}
+
 /* ============================================================
    デモデータ（GASでは使われません）
    ============================================================ */
@@ -982,7 +1037,7 @@ const DEMO=(()=>{
   })));
   const finals={}; // period|name → {rank,note,by,at}
   let users=[{email:"hirota@example.com",name:"（デモ）廣田",role:"閲覧者",at:"2026/11/14 10:00",last:""}];
-  const ai={}; const ivs=[]; let pass="genesis", opFrom="2026-11-14", opTo="2026-11-30";
+  const ai={}; const ivs=[]; let gds=[{name:"ゴッサムスタッフ01",id:"d1",when:"2025年12月",by:"竹澤",text:"忙しい時間帯に呼び出しランプへの対応が遅れる。手を止めて先に向かうよう指導。",at:""},{name:"ゴッサムスタッフ01",id:"d2",when:"2026年6月",by:"廣田",text:"後輩への指示が強い言い方になる。理由を添えて伝えるよう指導。",at:""}]; let pass="genesis", opFrom="2026-11-14", opTo="2026-11-30";
   const opState=()=>{const t=new Date(),f=opFrom?new Date(opFrom+"T00:00:00"):null,e=opTo?new Date(opTo+"T23:59:59"):null;
     return{state:f&&t<f?"before":e&&t>e?"after":"open",from:opFrom,to:opTo}};
   const lock={}; // 今期の入力状況（デモ）
@@ -1008,7 +1063,7 @@ const DEMO=(()=>{
     const a=ai[period+"|"+name], st=storeOf(name);
     const others=cur.filter(r=>r.by!==name);
     const part=rs=>{const x=score(rs,name);return{n:x.n,avg:x.avg,overall:x.overall}};
-    return {period,name,store:st,role:roleOf(name),...sc,comments,history,analysis:a?a.a:null,analyzedAt:a?a.at:"",interviews:ivs.filter(v=>v.name===name),
+    return {period,name,store:st,role:roleOf(name),...sc,comments,history,analysis:a?a.a:null,analyzedAt:a?a.at:"",interviews:ivs.filter(v=>v.name===name),guidance:gds.filter(g=>g.name===name),
       bench:bench(period,name,st),split:{own:part(others.filter(r=>r.byStore===st)),other:part(others.filter(r=>r.byStore!==st))},
       final:finals[period+"|"+name]||null,ranks:["S","A","B","C","D"],
       status:Object.assign({state:"未提出",at:""},lock[name]),isCurrent:period===periods[2]};
@@ -1036,6 +1091,7 @@ const DEMO=(()=>{
       overall:`総合は${sgn(p.overall)}（100点換算 ${pts100(p.overall)}点）。「${ITEMS[hi]}」の評価が最も高く、「${ITEMS[lo]}」が相対的に低い結果です。${prev?`前回（${sgn(prev.overall)}）から${p.overall>=prev.overall?"上がって":"下がって"}います。`:""}`,
       good,bad,
       gap:p.self?`本人の自己評価（総合 ${sgn((p.self[0]+p.self[1]+p.self[2])/3)}）は、周りからの評価（${sgn(p.overall)}）より${(p.self[0]+p.self[1]+p.self[2])/3>p.overall?"高め":"低め"}です。`:"",
+      history:p.guidance&&p.guidance.length?`これまで${p.guidance.length}回の指導記録があります（最初は${p.guidance[0].when||"時期不明"}「${p.guidance[0].text.slice(0,30)}」）。今回「${ITEMS[lo]}」が相対的に低いため、同じ課題が続いていないか面談で確かめ、伝え方を変えることも検討してください。（デモの簡易版）`:"",
       followup:iv?`前回「${iv.guidance[0]}」と指導しました。今回「${ITEMS[2]}」は ${sgn(prev&&prev.avg[2])} → ${sgn(p.avg[2])} で、${p.avg[2]>=(prev?prev.avg[2]:0)?"改善が見られます":"まだ改善が見られません"}。`:"",
       position:p.bench&&p.bench.rank?`総合は店舗平均（${sgn(p.bench.storeOverall)}）より${p.overall>=p.bench.storeOverall?"高く":"低く"}、店舗内で${p.bench.rank}位／${p.bench.count}人です。${p.split.other.n?`他店舗の人からの評価（${sgn(p.split.other.overall)}）は自店舗から（${sgn(p.split.own.overall)}）より${p.split.other.overall>=p.split.own.overall?"高め":"低め"}です。`:""}`:"",
       advice:ADV[lo],
@@ -1078,6 +1134,17 @@ const DEMO=(()=>{
       return{period:per,counts:{responses:n,lock:0,ai:0,interviews:0,finals:0},periods}},
     adminUnlock:(name)=>{const code=String(1000+Math.floor(rnd()*9000));lock[name]={state:"入力中",at:"たった今"};return{code}},
     adminPerson:person,
+    adminAddGuidance:(g)=>{if(!storeOf(g.name))throw new Error("名簿に見つかりません");if(!String(g.text||"").trim())throw new Error("指導内容が空です");
+      gds.push({name:g.name,id:"d"+Date.now(),when:String(g.when||"").trim(),by:String(g.by||"").trim(),text:String(g.text).trim(),at:"たった今"});return{guidance:gds.filter(x=>x.name===g.name)}},
+    adminDeleteGuidance:(name,id)=>{gds=gds.filter(x=>!(x.name===name&&x.id===id));return{guidance:gds.filter(x=>x.name===name)}},
+    adminImportGuidance:(text,dry)=>{let name="",noName=0;const add=[],unknown=new Set();let dup=0;
+      String(text||"").split(/\r?\n/).forEach(l=>{const s=l.trim();if(!s)return;const h=s.match(/^(?:【(.+?)】|■\s*(.+))$/);
+        if(h){const raw=(h[1]||h[2]).replace(/[\s　]+/g,"");name=Object.values(members).flat().map(m=>m.name).find(n=>n.replace(/[\s　]+/g,"")===raw)||(h[1]||h[2]).trim();return;}
+        if(!name){noName++;return;} if(!storeOf(name)){unknown.add(name);return;}
+        const p=s.split(/\s*[｜|]\s*/);const g={name,when:p.length>=2?p[0]:"",by:p.length>=3?p[1]:"",text:(p.length>=3?p.slice(2).join("｜"):p.length===2?p[1]:s).replace(/^[-・●]\s*/,"")};
+        if(gds.concat(add).some(x=>x.name===g.name&&x.when===g.when&&x.text===g.text)){dup++;return;} add.push(g);});
+      if(!dry) add.forEach((g,i)=>gds.push({...g,id:"d"+Date.now()+i,at:"たった今"}));
+      return{added:add.length,people:new Set(add.map(g=>g.name)).size,duplicates:dup,unknown:[...unknown],noName,dryRun:!!dry}},
     adminStoreReport:(period)=>({period,stores:STORES.map(st=>{
       const ppl=members[st].map((m,i)=>{const p=person(period,m.name);const a=ai[period+"|"+m.name];const f=finals[period+"|"+m.name];
         return{name:m.name,role:m.role,order:i+1,n:p.n,avg:p.avg,overall:p.overall,self:p.self,rank:p.n?p.bench.rank:null,
