@@ -254,7 +254,7 @@ const yen=n=>Number(n||0).toLocaleString("ja-JP");
 const errMsg=e=>(e&&e.message)||String(e);
 function toast(m){
   if(/ログインの有効期限/.test(m)&&$("logoutBtn")){ $("logoutBtn").click(); $("loginErr").textContent=m; return; }document.querySelectorAll(".toast").forEach(n=>n.remove());const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),4000)}
-const STORES=["オペラ","ゴッサム","エルシティ","総務・サービス部"];
+let STORES=["オペラ","ゴッサム","エルシティ","総務・サービス部","役員"]; // 本番はサーバーから受け取る（D.stores）
 
 let PW="", D=null, rank=1, store="全店", openProd=null;
 if(!LIVE) $("demoBox").innerHTML=`<div class="demo">試作版です（パスワードは何でもOK）。数字はデモ用の作り物です。</div>`;
@@ -334,7 +334,7 @@ $("accTbl").onclick=async e=>{const b=e.target.closest("[data-rm]");if(!b)return
   if(!await ask({title:`${b.dataset.rm} を削除しますか？`,msg:"この人は管理画面に入れなくなります。",ok:"削除する",danger:true}))return;
   api("xmasRemoveUser",PW,b.dataset.rm).then(r=>{drawUsers(r);toast("削除しました")}).catch(e=>toast(errMsg(e)))};
 function load(year){
-  return api("xmasAdmin",PW,year||"").then(d=>{D=d;$("login").classList.add("hidden");$("app").classList.remove("hidden");
+  return api("xmasAdmin",PW,year||"").then(d=>{D=d;if(d.stores)STORES=d.stores;$("login").classList.add("hidden");$("app").classList.remove("hidden");
     $("yearSel").classList.remove("hidden");
     $("yearSel").innerHTML=d.years.map(y=>`<option ${y===d.year?"selected":""}>${esc(y)}</option>`).join("");
     $("dl").value=d.open.deadline||"";
