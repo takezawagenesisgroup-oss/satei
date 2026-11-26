@@ -78,6 +78,27 @@
   .dlg input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;margin-top:4px}
   .dlg .big{font-size:36px;font-weight:800;letter-spacing:.3em;text-align:center;color:var(--red2);background:#fff3c4;border-radius:10px;padding:8px 0;margin:10px 0}
   .dlg .row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  #printArea{display:none}
+  @media print{
+    @page{size:A4;margin:12mm}
+    body{background:#fff}
+    body>*:not(#printArea){display:none!important}
+    #printArea{display:block;color:#000;font-size:10.5pt}
+    #printArea h1{font-size:16pt;margin:0 0 2mm}
+    #printArea h2{font-size:12.5pt;margin:6mm 0 2mm;border-bottom:1.5pt solid #000;padding-bottom:1mm}
+    #printArea h3{font-size:11pt;margin:4mm 0 1.5mm}
+    #printArea .meta{font-size:9pt;margin-bottom:3mm}
+    #printArea table{width:100%;border-collapse:collapse;min-width:0;page-break-inside:auto}
+    #printArea th,#printArea td{border:.6pt solid #555;padding:1.2mm 1.6mm;font-size:9pt;vertical-align:top}
+    #printArea th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #printArea tr{page-break-inside:avoid}
+    #printArea .n{text-align:right;white-space:nowrap}
+    #printArea .sub td{background:#f3f3f3!important;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #printArea .brk{page-break-before:always}
+    #printArea .box{display:block;border:0;margin:0}
+    #printArea .chk{width:12mm;text-align:center}
+    #printArea .note{font-size:8.5pt;margin:1mm 0 2mm}
+  }
   .rdHead{padding:10px 14px 0;font-weight:700}
   .rdBar{display:flex;gap:8px;align-items:center;padding:10px 14px 14px;flex-wrap:wrap}
   .filter{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
@@ -104,15 +125,24 @@
 </style>
 </head>
 <body>
-<header><h1>🎄 クリスマスプレゼント 集計</h1><a id="adminLink2" target="_top" href="#" style="color:#fff;font-size:12px;opacity:.8">申請画面へ</a><select id="yearSel" class="hidden"></select></header>
+<header><h1>🎄 クリスマスプレゼント 集計</h1><a id="adminLink2" target="_top" href="#" style="color:#fff;font-size:12px;opacity:.8">申請画面へ</a><select id="yearSel" class="hidden"></select>
+  <span id="meBox" class="hidden" style="font-size:12px;opacity:.9"><span id="meName"></span>
+    <button class="btn s" id="printBtn" style="margin-left:6px">🖨 印刷（総務へ引継ぎ）</button>
+    <button class="btn s sub" id="logoutBtn" style="margin-left:4px">ログアウト</button></span></header>
 <main>
   <div id="demoBox"></div>
   <div class="login" id="login">
     <h2 style="margin:0 0 4px;font-size:16px">管理者ログイン</h2>
-    <p style="font-size:12px;color:var(--sub);margin:0">賞与査定の管理画面と同じパスワードです</p>
-    <input type="password" id="pw" placeholder="パスワード">
+    <div id="gBox" class="hidden">
+      <p style="font-size:12px;color:var(--sub);margin:0">登録されたGoogleアカウントで入ります（パスワードはいりません）</p>
+      <div id="gBtn" style="display:flex;justify-content:center;min-height:44px;margin:12px 0"></div>
+    </div>
     <div class="err" id="loginErr"></div>
-    <button class="btn" id="loginBtn" style="width:100%">ログイン</button>
+    <details id="pwBox" style="margin-top:6px">
+      <summary style="font-size:12px;color:var(--sub);cursor:pointer">パスワードで入る（予備）</summary>
+      <input type="password" id="pw" placeholder="管理パスワード">
+      <button class="btn" id="loginBtn" style="width:100%">ログイン</button>
+    </details>
     <a id="adminLink" target="_top" href="#" style="display:block;text-align:center;margin-top:14px;font-size:12px;color:var(--sub)">‹ スタッフの申請画面（一般の入口）に戻る</a>
   </div>
 
@@ -171,6 +201,17 @@
       <div class="scroll"><table class="rd pzl" id="pzTbl"></table></div>
     </div>
 
+    <div class="box" id="accBox">
+      <h2>🔑 管理画面に入れる人<small>Googleアカウントで登録すると、その人はパスワードなしで入れます。追加・削除はオーナーだけ</small></h2>
+      <div class="scroll"><table class="rd" id="accTbl"></table></div>
+      <div class="settings" id="accForm">
+        <div><label>Googleアカウント（メールアドレス）</label><input type="email" id="accEmail" placeholder="例：name@gmail.com" style="width:240px"></div>
+        <div><label>名前</label><input type="text" id="accName" placeholder="例：廣田" style="width:120px"></div>
+        <div><label>権限</label><select id="accRole" style="padding:6px;border-radius:8px;border:1px solid var(--line)"><option value="オーナー">オーナー（全部できる）</option><option value="閲覧者">閲覧者（見る・集計だけ）</option></select></div>
+        <div><button class="btn s ok" id="accAdd">追加</button></div>
+      </div>
+    </div>
+
     <div class="box">
       <h2>設定・書き出し</h2>
       <div class="settings">
@@ -183,6 +224,7 @@
     </div>
   </div>
 </main>
+<div id="printArea"></div>
 <div id="intro"></div>
 
 
@@ -208,14 +250,85 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const yen=n=>Number(n||0).toLocaleString("ja-JP");
 const errMsg=e=>(e&&e.message)||String(e);
-function toast(m){document.querySelectorAll(".toast").forEach(n=>n.remove());const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),4000)}
+function toast(m){
+  if(/ログインの有効期限/.test(m)&&$("logoutBtn")){ $("logoutBtn").click(); $("loginErr").textContent=m; return; }document.querySelectorAll(".toast").forEach(n=>n.remove());const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),4000)}
 const STORES=["オペラ","ゴッサム","エルシティ","総務・サービス部"];
 
 let PW="", D=null, rank=1, store="全店", openProd=null;
 if(!LIVE) $("demoBox").innerHTML=`<div class="demo">試作版です（パスワードは何でもOK）。数字はデモ用の作り物です。</div>`;
 
-$("loginBtn").onclick=()=>{PW=$("pw").value;api("xmasAdminLogin",PW).then(()=>load()).catch(e=>$("loginErr").textContent=errMsg(e))};
+/* ---------- ログイン：Googleでログイン（登録された人だけ・パスワードなし）／予備のパスワード ----------
+   PW にはログイン券（token）が入る。端末には保存しない */
+let ME=null;
+function afterLogin(r){PW=r.token;ME=r.me;$("loginErr").textContent="";
+  $("meName").textContent=(ME.name||ME.email)+"（"+ME.role+"）";$("meBox").classList.remove("hidden");load()}
+$("loginBtn").onclick=()=>{$("loginErr").textContent="";api("xmasAdminLogin",$("pw").value).then(afterLogin).catch(e=>$("loginErr").textContent=errMsg(e))};
 $("pw").onkeydown=e=>{if(e.key==="Enter")$("loginBtn").click()};
+function loginGoogle(cred){$("loginErr").textContent="確認しています…";api("xmasLoginGoogle",cred).then(afterLogin).catch(e=>$("loginErr").textContent=errMsg(e))}
+function setupGoogle(cid){
+  if(!cid) { $("pwBox").open=true; return; }
+  $("gBox").classList.remove("hidden");
+  if(!API_URL){ $("gBtn").innerHTML='<p style="font-size:12px;color:var(--sub)">この画面では「Googleでログイン」が使えません。申請画面（公開ページ）の「管理者の方はこちら」から入ってください。</p>'; $("pwBox").open=true; return; }
+  const draw=()=>{try{google.accounts.id.initialize({client_id:cid,callback:r=>loginGoogle(r.credential),ux_mode:"popup",auto_select:false});
+    google.accounts.id.renderButton($("gBtn"),{theme:"outline",size:"large",text:"signin_with",shape:"pill",locale:"ja",width:260});}
+    catch(e){$("loginErr").textContent="Googleのログインボタンを表示できませんでした："+errMsg(e)}};
+  if(window.google&&google.accounts&&google.accounts.id) return draw();
+  // Googleのログイン部品（この1つだけは外から読み込む必要がある）
+  const sc=document.createElement("script");sc.src="https:\/\/accounts.google.com/gsi/client";sc.async=true;sc.onload=draw;
+  sc.onerror=()=>{$("loginErr").textContent="Googleのログイン部品を読み込めませんでした。電波の良いところで開き直してください"};document.head.appendChild(sc);
+}
+api("xmasAuthConfig").then(c=>setupGoogle(c.googleClientId)).catch(()=>{$("pwBox").open=true});
+$("logoutBtn").onclick=()=>{api("xmasLogout",PW).catch(()=>{});PW="";ME=null;D=null;$("app").classList.add("hidden");$("meBox").classList.add("hidden");$("yearSel").classList.add("hidden");$("login").classList.remove("hidden");$("pw").value="";};
+
+/* ---------- 印刷（総務への引継ぎ用） ----------
+   ①発注表（第1希望・お店ごと・店舗別の数）②予備（第2希望）③受け渡し表（個人別・受取チェック欄）④未申請の人 */
+function printReport(){
+  if(!D){toast("先にログインしてください");return}
+  const P=D.people, done=P.filter(p=>p.picks), sumL=l=>(l||[]).reduce((a,i)=>a+i.price*i.qty,0);
+  const shopOf=id=>(D.prizes.find(p=>p.id===id)||{}).shop||"その他", order=D.prizes.map(p=>p.id);
+  const agg=r=>{const m={};done.forEach(p=>(p.picks[r]||[]).forEach(i=>{const x=m[i.id]=m[i.id]||{id:i.id,name:i.name,price:i.price,qty:0,by:{},who:[]};
+      x.qty+=i.qty;x.by[p.store]=(x.by[p.store]||0)+i.qty;x.who.push(p.name+(i.qty>1?"×"+i.qty:""))}));
+    return Object.values(m).map(x=>Object.assign(x,{shop:shopOf(x.id)})).sort((a,b)=>{const ia=order.indexOf(a.id),ib=order.indexOf(b.id);return (ia<0?999:ia)-(ib<0?999:ib)})};
+  const order1=r=>{const rows=agg(r);if(!rows.length)return '<p>申請はまだありません</p>';
+    const shops=[...new Set(rows.map(x=>x.shop))];let tq=0,ty=0;
+    let h=`<table><thead><tr><th>商品</th><th class="n">単価</th>${STORES.map(s=>`<th class="n">${esc(s.replace("・サービス部",""))}</th>`).join("")}<th class="n">数量</th><th class="n">金額</th><th>選んだ人</th></tr></thead><tbody>`;
+    shops.forEach(sh=>{const rs=rows.filter(x=>x.shop===sh),q=rs.reduce((a,x)=>a+x.qty,0),y=rs.reduce((a,x)=>a+x.qty*x.price,0);tq+=q;ty+=y;
+      h+=`<tr class="sub"><td colspan="${2+STORES.length}">${esc(sh)}</td><td class="n">${q}</td><td class="n">${yen(y)}</td><td></td></tr>`;
+      h+=rs.map(x=>`<tr><td>${esc(x.name)}</td><td class="n">${yen(x.price)}</td>${STORES.map(s=>`<td class="n">${x.by[s]||""}</td>`).join("")}<td class="n"><b>${x.qty}</b></td><td class="n">${yen(x.qty*x.price)}</td><td style="font-size:8pt">${esc(x.who.join("、"))}</td></tr>`).join("")});
+    return h+`<tr class="sub"><td colspan="${2+STORES.length}">合計</td><td class="n">${tq}</td><td class="n">${yen(ty)} 円</td><td></td></tr></tbody></table>`};
+  const now=new Date(), stamp=`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`;
+  const status=STORES.map(s=>{const ps=P.filter(p=>p.store===s);return `${esc(s)} ${ps.filter(p=>p.status==="申請済").length}/${ps.length}人`}).join("　");
+  const txt=l=>(l||[]).map(i=>esc(i.name)+(i.qty>1?"×"+i.qty:"")).join("、");
+  let h=`<h1>クリスマスプレゼント 集計表（${esc(D.year)}年）</h1>
+    <div class="meta">印刷：${stamp}　印刷した人：${esc(ME?(ME.name||ME.email):"")}　締切：${esc(D.open.label||"なし")}<br>申請状況：${status}　（全体 ${P.filter(p=>p.status==="申請済").length}/${P.length}人）</div>
+    <h2>① 発注表（第1希望）</h2><p class="note">お店ごとに、この数を発注してください。品切れのときは ② の予備を見て、その人の第2希望を用意します。</p>${order1(1)}
+    <h2 class="brk">② 予備（第2希望）</h2><p class="note">第1希望の商品が手に入らなかった人の分だけ使います（全部を発注する必要はありません）。</p>${order1(2)}
+    <h2 class="brk">③ 受け渡し表（個人別）</h2><p class="note">渡したら「受取」に✓をつけてください。予算は役職の基本額＋個別の上乗せです。</p>`;
+  STORES.forEach((s,k)=>{const ps=P.filter(p=>p.store===s);if(!ps.length)return;
+    h+=`<h3>${esc(s)}（${ps.length}人）</h3><table><thead><tr><th>氏名</th><th>役職</th><th class="n">予算</th><th>第1希望</th><th class="n">金額</th><th>第2希望（予備）</th><th>状態</th><th class="chk">受取</th></tr></thead><tbody>${
+      ps.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.role)}</td><td class="n">${yen(p.budget)}</td><td>${p.picks?txt(p.picks[1]):""}</td><td class="n">${p.picks?yen(sumL(p.picks[1])):""}</td><td>${p.picks?txt(p.picks[2]):""}</td><td>${esc(p.status)}</td><td class="chk">□</td></tr>`).join("")}</tbody></table>`});
+  const no=P.filter(p=>p.status!=="申請済");
+  h+=`<h2>④ まだ申請していない人（${no.length}人）</h2>${no.length?`<table><thead><tr><th>所属</th><th>氏名</th><th>役職</th><th>状態</th></tr></thead><tbody>${no.map(p=>`<tr><td>${esc(p.store)}</td><td>${esc(p.name)}</td><td>${esc(p.role)}</td><td>${esc(p.status)}</td></tr>`).join("")}</tbody></table>`:"<p>全員申請済みです</p>"}`;
+  $("printArea").innerHTML=h;
+  setTimeout(()=>window.print(),50);
+}
+$("printBtn").onclick=printReport;
+
+/* ---------- 管理画面に入れる人 ---------- */
+function loadUsers(){api("xmasUsers",PW).then(drawUsers).catch(e=>toast(errMsg(e)))}
+function drawUsers(r){
+  const owner=r.me.role==="オーナー";
+  $("accForm").classList.toggle("hidden",!owner);
+  $("accTbl").innerHTML=`<thead><tr><th>名前</th><th>Googleアカウント</th><th>権限</th><th>最後に入った日</th><th></th></tr></thead><tbody>${
+    r.users.length?r.users.map(u=>`<tr><td><b>${esc(u.name||"")}</b></td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td>${esc(u.last||"－")}</td>
+      <td>${owner&&u.email!==r.me.email?`<button class="btn s sub" data-rm="${esc(u.email)}">削除</button>`:""}</td></tr>`).join("")
+    :`<tr><td colspan="5" style="color:var(--sub)">まだ誰も登録されていません。下から追加してください</td></tr>`}</tbody>`;
+}
+$("accAdd").onclick=()=>{const email=$("accEmail").value.trim();if(!email){toast("メールアドレスを入れてください");return}
+  api("xmasAddUser",PW,{email,name:$("accName").value,role:$("accRole").value}).then(r=>{drawUsers(r);$("accEmail").value="";$("accName").value="";toast(email+" を追加しました。この人は「Googleでログイン」で入れます")}).catch(e=>toast(errMsg(e)))};
+$("accTbl").onclick=async e=>{const b=e.target.closest("[data-rm]");if(!b)return;
+  if(!await ask({title:`${b.dataset.rm} を削除しますか？`,msg:"この人は管理画面に入れなくなります。",ok:"削除する",danger:true}))return;
+  api("xmasRemoveUser",PW,b.dataset.rm).then(r=>{drawUsers(r);toast("削除しました")}).catch(e=>toast(errMsg(e)))};
 function load(year){
   return api("xmasAdmin",PW,year||"").then(d=>{D=d;$("login").classList.add("hidden");$("app").classList.remove("hidden");
     $("yearSel").classList.remove("hidden");
@@ -223,6 +336,7 @@ function load(year){
     $("dl").value=d.open.deadline||"";
     ["dlBtn","newYearBtn"].forEach(id=>$(id).disabled=!d.isCurrent);
     setIntroForm(d.intro);
+    loadUsers();
     draw()}).catch(e=>{toast(errMsg(e))});
 }
 $("yearSel").onchange=e=>load(e.target.value);
@@ -491,9 +605,15 @@ const DEMO=(()=>{
     const status=r<.7?"申請済":r<.85?"入力中":"未申請";
     people.push({store:s,name:`${s.slice(0,2)}スタッフ${String(i+1).padStart(2,"0")}`,role,base:budget,adj:0,adjMemo:"",budget,status,at:"",picks:status==="申請済"?{1:pick(budget),2:pick(budget)}:null})}});
   let deadline="";
+  const users=[{email:"owner@example.com",name:"試作のオーナー",role:"オーナー",at:"",last:""}];
   const intro={text:"現場でお客様に\n笑顔で接する皆さんに\n島崎サンタさんからの\n素敵なクリスマスプレゼント🎁",effect:"mist",sec:5,image:""};
   return {
-    xmasAdminLogin:()=>({ok:true}),
+    xmasAdminLogin:()=>({token:"demo",me:{email:"owner@example.com",name:"試作のオーナー",role:"オーナー"}}),
+    xmasAuthConfig:()=>({googleClientId:""}),
+    xmasLogout:()=>({ok:true}),
+    xmasUsers:()=>({me:{email:"owner@example.com",role:"オーナー"},users:users}),
+    xmasAddUser:(t,c)=>{if(users.some(u=>u.email===c.email))throw new Error("すでに登録されています");users.push({email:c.email,name:c.name,role:c.role,at:"",last:""});return{me:{email:"owner@example.com",role:"オーナー"},users}},
+    xmasRemoveUser:(t,e)=>{const i=users.findIndex(u=>u.email===e);users.splice(i,1);return{me:{email:"owner@example.com",role:"オーナー"},users}},
     xmasSetIntro:(pw,c)=>{if(c.image!==null)intro.image=c.image;Object.assign(intro,{text:c.text,effect:c.effect,sec:c.sec});return Object.assign({},intro)},
     xmasAdmin:(pw,y)=>({intro:Object.assign({},intro),year:y||"2026",years:["2025","2026"],isCurrent:(y||"2026")==="2026",open:{closed:false,deadline,label:deadline?deadline+" 23:59":""},
       people:(y==="2025")?[]:people,prizes:P}),
