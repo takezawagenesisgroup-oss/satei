@@ -191,7 +191,8 @@
       <div class="settings">
         <div><label>お店の名前（空欄ならチラシから読み取ります）</label><input type="text" id="rdShop" placeholder="例：ろまん亭"></div>
         <div><label>チラシ（写真・PDF。何枚でも）</label><input type="file" id="rdFile" accept="image/*,application/pdf" multiple></div>
-        <div><label class="filter" style="margin-bottom:6px"><input type="checkbox" id="rdAuto" checked> 読み取ったらそのまま登録する</label><button class="btn s" id="rdBtn">読み取って登録</button></div>
+        <div><label class="filter" style="margin-bottom:6px"><input type="checkbox" id="rdAuto" checked> 読み取ったらそのまま登録する</label><button class="btn s" id="rdBtn">読み取って登録</button>
+          <button class="btn s sub" id="rdManual" title="AIを使わず、写真1枚ごとに商品名と金額を手で入れる">手で入れる</button></div>
       </div>
       <div id="rdOut"></div>
     </div>
@@ -262,7 +263,9 @@ if(!LIVE) $("demoBox").innerHTML=`<div class="demo">試作版です（パスワ�
 let ME=null;
 function afterLogin(r){PW=r.token;ME=r.me;$("loginErr").textContent="";
   $("meName").textContent=(ME.name||ME.email)+"（"+ME.role+"）";$("meBox").classList.remove("hidden");load()}
-$("loginBtn").onclick=()=>{$("loginErr").textContent="";api("xmasAdminLogin",$("pw").value).then(afterLogin).catch(e=>$("loginErr").textContent=errMsg(e))};
+$("loginBtn").onclick=()=>{$("loginErr").textContent="";const pw=$("pw").value;
+  // 古いサーバー（ログイン券を返さない版）でも入れるように、そのときは入れたパスワードをそのまま使う
+  api("xmasAdminLogin",pw).then(r=>afterLogin(r&&r.token?r:{token:pw,me:{email:"",name:"管理パスワード",role:"オーナー"}})).catch(e=>$("loginErr").textContent=errMsg(e))};
 $("pw").onkeydown=e=>{if(e.key==="Enter")$("loginBtn").click()};
 function loginGoogle(cred){$("loginErr").textContent="確認しています…";api("xmasLoginGoogle",cred).then(afterLogin).catch(e=>$("loginErr").textContent=errMsg(e))}
 function setupGoogle(cid){
@@ -502,6 +505,16 @@ function crop(cv,box){
   c.getContext("2d").drawImage(cv,x1*W,y1*H,sw,sh,0,0,c.width,c.height);
   let u=c.toDataURL("image/jpeg",.6); if(u.length>45000) u=c.toDataURL("image/jpeg",.4); return u.length>45000?"":u;
 }
+/* AIを使わずに登録：写真1枚＝1商品。商品名と金額は表で入れてから「追加」 */
+$("rdManual").onclick=async()=>{
+  const files=[...$("rdFile").files].filter(f=>f.type!=="application/pdf");
+  if(!files.length){toast("商品の写真を選んでください（PDFは「読み取って登録」で）");return}
+  try{ for(const f of files){ const cv=toCanvas(await loadImg(await readURL(f)),1200);
+      RD.push({shop:$("rdShop").value.trim()||"",cat:"その他",name:"",price:0,note:"",photo:crop(cv,[0,0,1,1]),on:true}); }
+    drawRD(); toast("下の表で、お店・商品名・金額を入れて「追加」を押してください");
+  }catch(e){toast(errMsg(e))}
+  $("rdFile").value="";
+};
 $("rdBtn").onclick=async()=>{
   const files=[...$("rdFile").files]; if(!files.length){toast("チラシの写真かPDFを選んでください");return}
   const auto=$("rdAuto").checked;
@@ -540,6 +553,7 @@ function drawRD(){
     <div class="rdBar"><button class="btn ok" id="rdAdd">チェックした商品を景品リストに追加</button><button class="btn sub" id="rdClear">やめる</button>
       <small style="color:var(--sub)">同じお店・同じ商品名がすでにあるものは追加されません</small></div>`;
   $("rdAdd").onclick=()=>{const items=RD.filter(r=>r.on); if(!items.length){toast("チェックが1つもありません");return}
+    const bad=items.find(r=>!String(r.name).trim()||!(r.price>0)||!String(r.shop).trim()); if(bad){toast("お店・商品名・金額（円）を全部入れてください");return}
     if(!D.isCurrent){toast("今年度を表示しているときだけ追加できます");return}
     $("rdAdd").disabled=true;
     api("xmasAddPrizes",PW,items).then(r=>{toast(`${r.added}件を追加しました`+(r.skipped.length?`（すでにある ${r.skipped.length}件は追加しませんでした）`:""));RD=[];drawRD();load(D.year)})
