@@ -194,6 +194,7 @@
         <div><label class="filter" style="margin-bottom:6px"><input type="checkbox" id="rdAuto" checked> 読み取ったらそのまま登録する</label><button class="btn s" id="rdBtn">読み取って登録</button>
           <button class="btn s sub" id="rdManual" title="AIを使わず、写真1枚ごとに商品名と金額を手で入れる">手で入れる</button></div>
       </div>
+      <div class="rdBar" id="aiBox" style="padding-top:0"></div>
       <div id="rdOut"></div>
     </div>
 
@@ -339,6 +340,7 @@ function load(year){
     $("dl").value=d.open.deadline||"";
     ["dlBtn","newYearBtn"].forEach(id=>$(id).disabled=!d.isCurrent);
     setIntroForm(d.intro);
+    drawAi(d.aiReady);
     loadUsers();
     draw()}).catch(e=>{toast(errMsg(e))});
 }
@@ -505,6 +507,17 @@ function crop(cv,box){
   c.getContext("2d").drawImage(cv,x1*W,y1*H,sw,sh,0,0,c.width,c.height);
   let u=c.toDataURL("image/jpeg",.6); if(u.length>45000) u=c.toDataURL("image/jpeg",.4); return u.length>45000?"":u;
 }
+/* AIの鍵：入っていなければ、ここで入れられる（オーナー） */
+function drawAi(ok){
+  $("aiBox").innerHTML=ok?'<small style="color:var(--ok);font-weight:700">✓ AIの読み取りが使えます（写真を選んで「読み取って登録」を押すと、商品ごとに写真を切り抜いて、名前・金額まで自動で入ります）</small>'
+    :`<div style="background:#fff8e2;border-radius:10px;padding:10px 12px;width:100%"><b style="font-size:13px">AIで自動で読み取るには「鍵」が必要です（最初の1回だけ）</b>
+      <p style="font-size:12px;color:var(--sub);margin:4px 0 8px">Anthropic（Claude）のAPIキー（sk-ant- で始まる文字）を貼り付けて「保存」。キーは console.anthropic.com の「API Keys」で作れます。保存した鍵はサーバーにだけ置かれ、画面には出ません。</p>
+      <input type="password" id="aiKey" placeholder="sk-ant-…" autocomplete="off" style="width:min(320px,100%);padding:7px;border:1px solid var(--line);border-radius:8px"> <button class="btn s ok" id="aiSave">保存</button></div>`;
+  if(!ok) $("aiSave").onclick=()=>{const k=$("aiKey").value.trim();if(!k){toast("鍵を貼り付けてください");return}
+    $("aiSave").disabled=true;$("aiSave").textContent="確認中…";
+    api("xmasSetApiKey",PW,k).then(r=>{D.aiReady=true;drawAi(true);toast("鍵を保存しました。AIの読み取りが使えます")})
+      .catch(e=>{toast(errMsg(e));$("aiSave").disabled=false;$("aiSave").textContent="保存"})};
+}
 /* AIを使わずに登録：写真1枚＝1商品。商品名と金額は表で入れてから「追加」 */
 $("rdManual").onclick=async()=>{
   const files=[...$("rdFile").files].filter(f=>f.type!=="application/pdf");
@@ -618,10 +631,11 @@ const DEMO=(()=>{
     const role=roles[i]||"キャスト",budget=role==="店長"?9000:/主任|社員/.test(role)?6000:3000,r=rnd();
     const status=r<.7?"申請済":r<.85?"入力中":"未申請";
     people.push({store:s,name:`${s.slice(0,2)}スタッフ${String(i+1).padStart(2,"0")}`,role,base:budget,adj:0,adjMemo:"",budget,status,at:"",picks:status==="申請済"?{1:pick(budget),2:pick(budget)}:null})}});
-  let deadline="";
+  let deadline="", aiReady=false;
   const users=[{email:"owner@example.com",name:"試作のオーナー",role:"オーナー",at:"",last:""}];
   const intro={text:"現場でお客様に\n笑顔で接する皆さんに\n島崎サンタさんからの\n素敵なクリスマスプレゼント🎁",effect:"mist",sec:5,image:""};
   return {
+    xmasSetApiKey:()=>{aiReady=true;return{aiReady:true}},
     xmasAdminLogin:()=>({token:"demo",me:{email:"owner@example.com",name:"試作のオーナー",role:"オーナー"}}),
     xmasAuthConfig:()=>({googleClientId:""}),
     xmasLogout:()=>({ok:true}),
@@ -629,7 +643,7 @@ const DEMO=(()=>{
     xmasAddUser:(t,c)=>{if(users.some(u=>u.email===c.email))throw new Error("すでに登録されています");users.push({email:c.email,name:c.name,role:c.role,at:"",last:""});return{me:{email:"owner@example.com",role:"オーナー"},users}},
     xmasRemoveUser:(t,e)=>{const i=users.findIndex(u=>u.email===e);users.splice(i,1);return{me:{email:"owner@example.com",role:"オーナー"},users}},
     xmasSetIntro:(pw,c)=>{if(c.image!==null)intro.image=c.image;Object.assign(intro,{text:c.text,effect:c.effect,sec:c.sec});return Object.assign({},intro)},
-    xmasAdmin:(pw,y)=>({intro:Object.assign({},intro),year:y||"2026",years:["2025","2026"],isCurrent:(y||"2026")==="2026",open:{closed:false,deadline,label:deadline?deadline+" 23:59":""},
+    xmasAdmin:(pw,y)=>({aiReady,intro:Object.assign({},intro),year:y||"2026",years:["2025","2026"],isCurrent:(y||"2026")==="2026",open:{closed:false,deadline,label:deadline?deadline+" 23:59":""},
       people:(y==="2025")?[]:people,prizes:P}),
     xmasUnlock:()=>({code:String(1000+Math.floor(Math.random()*9000))}),
     xmasSetDeadline:(pw,s)=>{deadline=s;return{closed:false,deadline:s,label:s?s+" 23:59":""}},
