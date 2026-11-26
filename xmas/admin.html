@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>クリスマスプレゼント 集計</title>
+<style>
+  :root{--night:#0f2a1f;--night2:#173d2c;--red:#c8102e;--red2:#a10d25;--gold:#e8b931;--bg:#f6f2ea;--card:#fff;--line:#e6dccb;
+    --text:#2a2320;--sub:#7a6e64;--ok:#1f7a4d;--warn:#c2410c}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:14px}
+  button,select,input{font-family:inherit;font-size:14px}
+  button{cursor:pointer}
+  .hidden{display:none!important}
+  header{background:linear-gradient(90deg,var(--night),var(--night2));color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:4px solid var(--red)}
+  header h1{font-size:17px;margin:0;flex:1;min-width:200px}
+  header select{border-radius:8px;border:0;padding:6px 8px}
+  main{max-width:1100px;margin:0 auto;padding:14px 16px 40px}
+  .login{max-width:340px;margin:60px auto;background:#fff;border-radius:14px;padding:22px;border-top:5px solid var(--red);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+  .login input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin:10px 0}
+  .btn{border:0;border-radius:8px;padding:8px 14px;font-weight:700;background:var(--red);color:#fff}
+  .btn.sub{background:#ece4d6;color:var(--text)}
+  .btn.ok{background:var(--ok)}
+  .btn.s{padding:4px 10px;font-size:12px}
+  .err{color:var(--red);font-weight:700;min-height:18px}
+  .demo{background:#fff4e5;border:1px solid #f5c98a;color:#8a4b00;font-size:12px;border-radius:8px;padding:8px 10px;margin-bottom:12px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+  .sc{background:#fff;border-radius:12px;padding:12px 14px;border:1px solid var(--line)}
+  .sc h3{margin:0 0 6px;font-size:13px;color:var(--sub)}
+  .sc .big{font-size:22px;font-weight:800}
+  .sc .big small{font-size:12px;color:var(--sub);font-weight:600}
+  .sc .bar{height:6px;background:#eee4d4;border-radius:3px;overflow:hidden;margin:6px 0}
+  .sc .bar i{display:block;height:100%;background:var(--ok)}
+  .sc p{margin:2px 0;font-size:12px;color:var(--sub)}
+  .sc.all{border:2px solid var(--gold)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:18px;padding:7px 14px;font-weight:700;color:var(--sub)}
+  .tab.on{background:var(--night);color:#fff;border-color:var(--night)}
+  .rtabs .tab.on{background:var(--red);border-color:var(--red)}
+  .note{font-size:12px;color:var(--sub);margin:0 0 10px;background:#fff8e2;border-radius:8px;padding:8px 10px}
+  .box{background:#fff;border-radius:12px;border:1px solid var(--line);margin-bottom:16px;overflow:hidden}
+  .box h2{font-size:15px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .box h2 small{font-weight:500;color:var(--sub);font-size:12px}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th,td{padding:8px 10px;border-bottom:1px solid #f0e8da;text-align:left;vertical-align:top}
+  th{background:#faf6ee;font-size:12px;color:var(--sub);white-space:nowrap}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  #pplTbl td:nth-child(-n+3),#pplTbl td:nth-child(5){white-space:nowrap}
+  tfoot td{font-weight:800;background:#fff8e2}
+  tr.prod{cursor:pointer}
+  tr.shopRow td{background:var(--night2);color:#fff;font-weight:800}
+  tr.prod:hover td{background:#fffaf0}
+  tr.who td{background:#fbf8f2;font-size:12px;color:var(--sub);padding-top:4px}
+  .z{color:#c9bfb2}
+  .st{font-size:11px;border-radius:8px;padding:2px 7px;font-weight:700;white-space:nowrap}
+  .st.no{background:#eee;color:#888}.st.p{background:#fdeee3;color:var(--warn)}.st.d{background:#e1f4ea;color:var(--ok)}
+  .settings{display:flex;gap:16px;flex-wrap:wrap;padding:12px 14px;align-items:flex-end}
+  .settings label{font-size:12px;color:var(--sub);display:block;margin-bottom:4px}
+  .settings input{padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+  .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#2a2320;color:#fff;border-radius:10px;padding:10px 14px;z-index:90;max-width:90%}
+  .adj{display:block;font-size:11px;color:var(--ok);font-weight:700}
+  .adj.m{color:var(--warn)}
+  .rd{width:100%;border-collapse:collapse}
+  .rd td{padding:6px;vertical-align:middle}
+  .rd input[type=text],.rd input[type=number],.rd select{width:100%;padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+  .rd img{width:64px;height:48px;object-fit:cover;border-radius:6px;display:block;background:#eee}
+  .rd .nop{width:64px;height:48px;border-radius:6px;background:#f3ece0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--sub)}
+  .pzl tr.off td{opacity:.45}
+  .pzl tr.shopRow td{opacity:1}
+  .pzl .btn{white-space:nowrap}
+  .pzl td:nth-child(n+3){white-space:nowrap}
+  .dlgBg{position:fixed;inset:0;background:rgba(10,20,15,.55);z-index:95;display:flex;align-items:center;justify-content:center;padding:16px}
+  .dlg{background:#fff;border-radius:14px;max-width:420px;width:100%;padding:18px;border-top:5px solid var(--red);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .dlg h3{margin:0 0 8px;font-size:16px}
+  .dlg p{margin:6px 0;font-size:13px;color:var(--sub);line-height:1.6;white-space:pre-line}
+  .dlg label{display:block;font-size:12px;color:var(--sub);margin-top:10px}
+  .dlg input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;margin-top:4px}
+  .dlg .big{font-size:36px;font-weight:800;letter-spacing:.3em;text-align:center;color:var(--red2);background:#fff3c4;border-radius:10px;padding:8px 0;margin:10px 0}
+  .dlg .row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .rdHead{padding:10px 14px 0;font-weight:700}
+  .rdBar{display:flex;gap:8px;align-items:center;padding:10px 14px 14px;flex-wrap:wrap}
+  .filter{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
+
+  /* ===== 最初のメッセージ（オーナーの思い）。xmas.html と xmas_admin.html で同じ ===== */
+  #intro{position:fixed;inset:0;z-index:85;display:none;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;
+    background:radial-gradient(ellipse at 50% 40%,#1f5a3d 0%,#0b1f16 75%)}
+  #intro.show{display:flex}
+  #intro .img{position:absolute;inset:0;background:center/contain no-repeat}
+  #intro .mist{position:absolute;inset:-10%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.9),rgba(230,240,235,.5) 70%);opacity:0}
+  #intro .txt{position:relative;z-index:2;color:#fff;text-align:center;padding:0 22px;font-weight:800;font-size:min(21px,5.2vw);line-height:1.9;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    text-shadow:0 0 14px rgba(232,185,49,.85),0 2px 6px rgba(0,0,0,.7)}
+  #intro .txt span{display:block;opacity:0;transform:translateY(20px) scale(.96);filter:blur(8px);animation:introRise 1.1s ease forwards}
+  #intro .txt span.big{font-size:min(25px,5.9vw);white-space:nowrap;color:#ffe08a;margin-top:6px}
+  @keyframes introRise{to{opacity:1;transform:none;filter:blur(0)}}
+  #intro .tw{position:absolute;z-index:1;opacity:0;animation:introTw 1.6s ease-in-out infinite;pointer-events:none}
+  @keyframes introTw{50%{opacity:1;transform:scale(1.35) rotate(15deg)}}
+  #intro .sn{position:absolute;top:-10px;color:#fff;opacity:.8;animation:introFall linear infinite;pointer-events:none}
+  @keyframes introFall{to{transform:translateY(110vh)}}
+  #intro .skip{position:absolute;z-index:3;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:rgba(255,255,255,.55);font-size:12px}
+  #intro.out{animation:introOut .8s ease forwards}
+  @keyframes introOut{to{opacity:0;filter:blur(6px)}}
+</style>
+</head>
+<body>
+<header><h1>🎄 クリスマスプレゼント 集計</h1><a id="adminLink2" target="_top" href="#" style="color:#fff;font-size:12px;opacity:.8">申請画面へ</a><select id="yearSel" class="hidden"></select></header>
+<main>
+  <div id="demoBox"></div>
+  <div class="login" id="login">
+    <h2 style="margin:0 0 4px;font-size:16px">管理者ログイン</h2>
+    <p style="font-size:12px;color:var(--sub);margin:0">賞与査定の管理画面と同じパスワードです</p>
+    <input type="password" id="pw" placeholder="パスワード">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" id="loginBtn" style="width:100%">ログイン</button>
+    <a id="adminLink" target="_top" href="#" style="display:block;text-align:center;margin-top:14px;font-size:12px;color:var(--sub)">‹ スタッフの申請画面（一般の入口）に戻る</a>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="cards" id="cards"></div>
+
+    <div class="tabs rtabs" id="rtabs">
+      <button class="tab" data-r="1">第1希望の集計（発注用）</button>
+      <button class="tab" data-r="2">第2希望の集計（予備）</button>
+    </div>
+    <div class="tabs" id="stabs"></div>
+    <div class="note" id="rnote"></div>
+
+    <div class="box">
+      <h2><span id="prodTitle">商品別</span><small>行をタップすると、だれが選んだかが出ます</small></h2>
+      <div class="scroll"><table id="prodTbl"></table></div>
+    </div>
+
+    <div class="box">
+      <h2><span id="pplTitle">個人別</span>
+        <span class="filter"><label><input type="checkbox" id="onlyNo"> 未申請・入力中だけ</label></span></h2>
+      <div class="scroll"><table id="pplTbl"></table></div>
+    </div>
+
+    <div class="box">
+      <h2>🎅 選ぶ前に見せるメッセージ<small>名前を選んで「えらびはじめる」を押したあと、数秒だけ表示します（タップで飛ばせます）</small></h2>
+      <div class="settings" style="align-items:flex-start">
+        <div style="flex:1;min-width:260px"><label>メッセージ（改行した所で1行ずつ浮かび上がります。最後の行は大きく）</label>
+          <textarea id="inText" rows="5" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px"></textarea></div>
+        <div><label>画像（任意。写真やイラスト）</label>
+          <div id="inImgBox" style="margin-bottom:6px"></div>
+          <input type="file" id="inFile" accept="image/*"><br>
+          <button class="btn s sub" id="inImgDel" style="margin-top:6px">画像を外す</button></div>
+        <div><label>画像の演出</label>
+          <select id="inEffect" style="padding:6px;border-radius:8px;border:1px solid var(--line)">
+            <option value="mist">霧がかかって薄くなる</option><option value="fade">ゆっくりフェードアウト</option><option value="none">そのまま表示</option></select>
+          <label style="margin-top:10px">表示する秒数</label>
+          <select id="inSec" style="padding:6px;border-radius:8px;border:1px solid var(--line)"><option value="2">2秒</option><option value="3">3秒</option><option value="4">4秒</option><option value="5">5秒</option><option value="6">6秒</option></select></div>
+      </div>
+      <div class="rdBar"><button class="btn ok" id="inSave">保存</button><button class="btn sub" id="inPrev">▶ プレビュー</button>
+        <small style="color:var(--sub)">文章も画像も空にすると、メッセージは出ずにすぐ選ぶ画面になります</small></div>
+    </div>
+
+    <div class="box">
+      <h2>📷 チラシから景品を読み取る<small>写真やPDFを選ぶと、AIが商品名と金額（税抜があれば税抜）を読み取ります。確認・修正してから追加してください</small></h2>
+      <div class="settings">
+        <div><label>お店の名前（空欄ならチラシから読み取ります）</label><input type="text" id="rdShop" placeholder="例：ろまん亭"></div>
+        <div><label>チラシ（写真・PDF。何枚でも）</label><input type="file" id="rdFile" accept="image/*,application/pdf" multiple></div>
+        <div><label class="filter" style="margin-bottom:6px"><input type="checkbox" id="rdAuto" checked> 読み取ったらそのまま登録する</label><button class="btn s" id="rdBtn">読み取って登録</button></div>
+      </div>
+      <div id="rdOut"></div>
+    </div>
+
+    <div class="box">
+      <h2><span id="pzTitle">登録済みの景品</span><small>「隠す」はフォームに出さないだけ（あとで戻せます）。「削除」は景品リストから消します</small></h2>
+      <div class="scroll"><table class="rd pzl" id="pzTbl"></table></div>
+    </div>
+
+    <div class="box">
+      <h2>設定・書き出し</h2>
+      <div class="settings">
+        <div><label>締切日（この日の23:59まで。空欄＝締切なし）</label><input type="date" id="dl"> <button class="btn s ok" id="dlBtn">保存</button></div>
+        <div><label>発注用にスプレッドシートへ書き出す</label><button class="btn s" id="expBtn">集計シートを作る</button></div>
+        <div><label>来年になったら（景品リストを今年からコピー）</label><button class="btn s sub" id="newYearBtn">新しい年度を始める</button></div>
+      </div>
+      <p style="font-size:12px;color:var(--sub);padding:0 14px 12px;margin:0">
+        景品の金額・写真の修正や、売り切れ（表示に ×）は「X'mas景品」シートで直せます。役職ごとの基本の予算は「X'mas設定」シート、個人ごとの上乗せは上の個人別の表の「金額調整」から。名簿は賞与と同じ「名簿」シートです。</p>
+    </div>
+  </div>
+</main>
+<div id="intro"></div>
+
+
+<script>window.GENESIS_API="https:\/\/script.google.com\/macros\/s\/AKfycbyRw4l5H-v--p4vjiU2zovgRQ0rf6iMR1B_zH0Hi_WVG84K73gnjPmijcBh0rEjbndy4Q\/exec";</script>
+<script>
+var IMG={};
+const isGAS=typeof google!=="undefined"&&google.script&&google.script.run;
+/* Googleの外（GitHub Pages）に置いた画面では window.GENESIS_API にサーバーのURLが入る（tools/build-static.py）。
+   複数のGoogleアカウントにログインした端末でも開けるように、ログイン情報なしで fetch する（サーバー側は doPost） */
+const API_URL=(typeof window!=="undefined"&&window.GENESIS_API)||"";
+const LIVE=!!isGAS||!!API_URL;
+function callApi(fn,args){
+  return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:args})})
+    .then(r=>r.json()).catch(()=>{throw new Error("サーバーと通信できませんでした。電波の良いところで、もう一度お試しください")})
+    .then(d=>{ if(!d||!d.ok) throw new Error(d&&d.error||"エラーが起きました"); return d.result; });
+}
+function api(fn,...a){
+  if(API_URL) return callApi(fn,a);
+  if(isGAS) return new Promise((ok,ng)=>google.script.run.withSuccessHandler(ok).withFailureHandler(ng)[fn](...a));
+  return new Promise((ok,ng)=>setTimeout(()=>{try{ok(JSON.parse(JSON.stringify(DEMO[fn](...a))))}catch(e){ng(e)}},200));
+}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const yen=n=>Number(n||0).toLocaleString("ja-JP");
+const errMsg=e=>(e&&e.message)||String(e);
+function toast(m){document.querySelectorAll(".toast").forEach(n=>n.remove());const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),4000)}
+const STORES=["オペラ","ゴッサム","エルシティ","総務・サービス部"];
+
+let PW="", D=null, rank=1, store="全店", openProd=null;
+if(!LIVE) $("demoBox").innerHTML=`<div class="demo">試作版です（パスワードは何でもOK）。数字はデモ用の作り物です。</div>`;
+
+$("loginBtn").onclick=()=>{PW=$("pw").value;api("xmasAdminLogin",PW).then(()=>load()).catch(e=>$("loginErr").textContent=errMsg(e))};
+$("pw").onkeydown=e=>{if(e.key==="Enter")$("loginBtn").click()};
+function load(year){
+  return api("xmasAdmin",PW,year||"").then(d=>{D=d;$("login").classList.add("hidden");$("app").classList.remove("hidden");
+    $("yearSel").classList.remove("hidden");
+    $("yearSel").innerHTML=d.years.map(y=>`<option ${y===d.year?"selected":""}>${esc(y)}</option>`).join("");
+    $("dl").value=d.open.deadline||"";
+    ["dlBtn","newYearBtn"].forEach(id=>$(id).disabled=!d.isCurrent);
+    setIntroForm(d.intro);
+    draw()}).catch(e=>{toast(errMsg(e))});
+}
+$("yearSel").onchange=e=>load(e.target.value);
+
+/* ---------- 集計 ---------- */
+const sum=list=>(list||[]).reduce((a,i)=>a+i.price*i.qty,0);
+const inStore=p=>store==="全店"||p.store===store;
+function aggregate(people){
+  // 商品ごとの数量（店舗別）。申請済の人だけ
+  const m={};
+  people.filter(p=>p.picks).forEach(p=>(p.picks[rank]||[]).forEach(i=>{
+    const k=i.id; m[k]=m[k]||{id:k,name:i.name,price:i.price,qty:0,by:{},who:[]};
+    m[k].qty+=i.qty; m[k].by[p.store]=(m[k].by[p.store]||0)+i.qty; m[k].who.push(p.name+(i.qty>1?"×"+i.qty:""));
+  }));
+  const order=D.prizes.map(p=>p.id);
+  const shop=id=>(D.prizes.find(p=>p.id===id)||{}).shop||"";
+  return Object.values(m).map(x=>Object.assign(x,{shop:shop(x.id)})).sort((a,b)=>{const ia=order.indexOf(a.id),ib=order.indexOf(b.id);return (ia<0?999:ia)-(ib<0?999:ib)});
+}
+// お店ごとの小計行（発注はお店ごとなので）
+function shopHead(shop,rows,cols){const rs=rows.filter(r=>r.shop===shop);
+  return `<tr class="shopRow"><td colspan="${3+cols.length}">🏠 ${esc(shop)}</td><td class="n">${rs.reduce((a,r)=>a+r.qty,0)}</td><td class="n">${yen(rs.reduce((a,r)=>a+r.qty*r.price,0))} 円</td></tr>`}
+function draw(){
+  // 店舗カード
+  const card=(name,ps)=>{const done=ps.filter(p=>p.status==="申請済").length,wip=ps.filter(p=>p.status==="入力中").length;
+    const t1=ps.reduce((a,p)=>a+(p.picks?sum(p.picks[1]):0),0),bud=ps.filter(p=>p.picks).reduce((a,p)=>a+p.budget,0);
+    return `<div class="sc ${name==="全店合計"?"all":""}"><h3>${esc(name)}</h3><div class="big">${done}<small> / ${ps.length}人 申請済</small></div>
+      <div class="bar"><i style="width:${ps.length?done/ps.length*100:0}%"></i></div>
+      <p>入力中 ${wip}人・未申請 ${ps.length-done-wip}人</p><p>第1希望の合計 <b>${yen(t1)}</b>円${bud?`（予算 ${yen(bud)}円）`:""}</p></div>`};
+  $("cards").innerHTML=card("全店合計",D.people)+STORES.map(s=>card(s,D.people.filter(p=>p.store===s))).join("");
+  document.querySelectorAll("#rtabs .tab").forEach(b=>b.classList.toggle("on",+b.dataset.r===rank));
+  $("stabs").innerHTML=["全店",...STORES].map(s=>`<button class="tab ${s===store?"on":""}" data-s="${esc(s)}">${s==="全店"?"全店合計":esc(s)}</button>`).join("");
+  $("rnote").innerHTML=rank===1?"🎁 <b>第1希望</b>：この表を見ながら発注してください。":"🎄 <b>第2希望は予備</b>です。第1希望の商品が手に入らなかった人の分だけ、こちらから用意します（全員分を発注する必要はありません）。";
+
+  const people=D.people.filter(inStore);
+  const rows=aggregate(people);
+  const cols=store==="全店"?STORES:[];
+  $("prodTitle").textContent=`第${rank}希望　商品別（${store==="全店"?"全店合計":store}）`;
+  const totQty=rows.reduce((a,r)=>a+r.qty,0), totYen=rows.reduce((a,r)=>a+r.qty*r.price,0);
+  $("prodTbl").innerHTML=`<thead><tr><th>お店</th><th>商品</th><th class="n">単価</th>${cols.map(s=>`<th class="n">${esc(s)}</th>`).join("")}<th class="n">数量</th><th class="n">金額</th></tr></thead>
+    <tbody>${rows.length?rows.map((r,i)=>(i===0||rows[i-1].shop!==r.shop?shopHead(r.shop,rows,cols):"")+`<tr class="prod" data-id="${esc(r.id)}"><td>${esc(r.shop)}</td><td><b>${esc(r.name)}</b></td><td class="n">${yen(r.price)}</td>
+      ${cols.map(s=>`<td class="n ${r.by[s]?"":"z"}">${r.by[s]||0}</td>`).join("")}<td class="n"><b>${r.qty}</b></td><td class="n">${yen(r.qty*r.price)}</td></tr>
+      ${openProd===r.id?`<tr class="who"><td colspan="${5+cols.length}">選んだ人：${esc(r.who.join("、"))}</td></tr>`:""}`).join("")
+      :`<tr><td colspan="${5+cols.length}" style="color:var(--sub)">まだ申請がありません</td></tr>`}</tbody>
+    <tfoot><tr><td colspan="${3+cols.length}">合計</td><td class="n">${totQty}</td><td class="n">${yen(totYen)} 円</td></tr></tfoot>`;
+
+  const only=$("onlyNo").checked;
+  const list=people.filter(p=>!only||p.status!=="申請済");
+  const txt=l=>(l||[]).map(i=>esc(i.name)+(i.qty>1?"×"+i.qty:"")).join("、");
+  const cls=s=>s==="申請済"?"d":s==="入力中"?"p":"no";
+  $("pplTitle").textContent=`第${rank}希望　個人別（${store==="全店"?"全店":store}）`;
+  $("pplTbl").innerHTML=`<thead><tr><th>所属</th><th>氏名</th><th>役職</th><th class="n">予算</th><th>状態</th><th>第${rank}希望</th><th class="n">合計</th><th class="n">残り</th><th></th></tr></thead>
+    <tbody>${list.map(p=>{const l=p.picks?p.picks[rank]:null,t=sum(l);return `<tr><td>${esc(p.store)}</td><td><b>${esc(p.name)}</b>${p.left?' <small style="color:var(--sub)">（名簿外）</small>':""}</td><td>${esc(p.role)}</td>
+      <td class="n">${yen(p.budget)}${p.adj?`<span class="adj ${p.adj<0?"m":""}" title="${esc(p.adjMemo||"")}">基本${yen(p.base)} ${p.adj>0?"＋":"−"}${yen(Math.abs(p.adj))}</span>`:""}
+        ${D.isCurrent&&!p.left?`<button class="btn s sub" data-adj="${esc(p.name)}" style="margin-top:4px">金額調整</button>`:""}</td><td><span class="st ${cls(p.status)}">${esc(p.status)}</span></td><td>${l?txt(l):'<span class="z">－</span>'}</td>
+      <td class="n">${l?yen(t):""}</td><td class="n">${l?yen(p.budget-t):""}</td>
+      <td>${D.isCurrent&&p.status!=="未申請"&&!p.left?`<button class="btn s sub" data-unlock="${esc(p.name)}">${p.status==="申請済"?"再申請させる":"パスワード再発行"}</button>`:""}</td></tr>`}).join("")
+      ||`<tr><td colspan="9" style="color:var(--sub)">該当する人はいません</td></tr>`}</tbody>`;
+  drawPrizes();
+}
+/* ---------- 登録済みの景品（個別に隠す・削除） ---------- */
+const photoOf=p=>p.photo||IMG[p.id]||IMG[String(p.id).split("-")[0]]||"";
+function chosen(id){ // 申請済みで、この商品を選んだ人数（第1・第2）
+  const c={1:0,2:0}; D.people.forEach(p=>{if(p.picks)[1,2].forEach(r=>{if((p.picks[r]||[]).some(i=>i.id===id))c[r]++})}); return c}
+function drawPrizes(){
+  $("pzTitle").textContent=`登録済みの景品（${D.year}年・${D.prizes.length}品）`;
+  const shops=[...new Set(D.prizes.map(p=>p.shop))], cur=D.isCurrent;
+  $("pzTbl").innerHTML=`<thead><tr><th>写真</th><th>商品名</th><th class="n">金額</th><th>分類</th><th class="n">選んだ人</th><th>状態</th><th></th></tr></thead><tbody>`+
+    (D.prizes.length?shops.map(sh=>{const ps=D.prizes.filter(p=>p.shop===sh);
+      return `<tr class="shopRow"><td colspan="6">🏠 ${esc(sh)}（${ps.length}品）</td><td>${cur?`<button class="btn s sub" data-pz="delete" data-shop="${esc(sh)}">このお店を全部削除</button>`:""}</td></tr>`+
+      ps.map(p=>{const c=chosen(p.id),ph=photoOf(p);
+        return `<tr class="${p.hidden?"off":""}"><td>${ph?`<img src="${esc(ph)}" alt="" loading="lazy">`:`<div class="nop">写真なし</div>`}</td>
+          <td><b>${esc(p.name)}</b>${p.note?`<br><small style="color:var(--sub)">${esc(p.note)}</small>`:""}</td>
+          <td class="n">${yen(p.price)}円</td><td>${esc(p.cat)}</td>
+          <td class="n">${c[1]+c[2]?`第1 ${c[1]}人・第2 ${c[2]}人`:'<span class="z">0人</span>'}</td>
+          <td>${p.hidden?'<span class="st no">非表示</span>':'<span class="st d">表示中</span>'}</td>
+          <td>${cur?`<button class="btn s sub" data-pz="${p.hidden?"show":"hide"}" data-id="${esc(p.id)}">${p.hidden?"表示する":"隠す"}</button>
+            <button class="btn s" data-pz="delete" data-id="${esc(p.id)}">削除</button>`:""}</td></tr>`}).join("")}).join("")
+    :`<tr><td colspan="7" style="color:var(--sub)">まだ景品がありません。上の「チラシから景品を読み取る」で登録してください</td></tr>`)+`</tbody>`;
+}
+$("pzTbl").onclick=async e=>{
+  const b=e.target.closest("[data-pz]"); if(!b) return;
+  const op=b.dataset.pz, ids=b.dataset.shop!==undefined?D.prizes.filter(p=>p.shop===b.dataset.shop).map(p=>p.id):[b.dataset.id];
+  const names=D.prizes.filter(p=>ids.includes(p.id)).map(p=>p.name);
+  if(op==="delete"){
+    const used=ids.reduce((a,id)=>{const c=chosen(id);return a+c[1]+c[2]},0);
+    const what=b.dataset.shop!==undefined?`「${b.dataset.shop}」の ${ids.length}品`:`「${names[0]}」`;
+    const ok=await ask({title:`${what}を削除しますか？`,msg:(used?`すでに申請した人が選んでいます（のべ${used}人）。申請の記録は残りますが、フォームからは選べなくなります。\n\n`:"")+"一時的に外すだけなら「隠す」を使ってください。",ok:"削除する",danger:true});
+    if(!ok) return;
+  }
+  b.disabled=true;
+  api("xmasPrizeOp",PW,op,ids).then(r=>{toast(op==="delete"?`${r.n}品を削除しました`:op==="hide"?"フォームに出さないようにしました":"フォームに出すようにしました");load(D.year)})
+    .catch(e=>{toast(errMsg(e));b.disabled=false});
+};
+
+$("rtabs").onclick=e=>{const b=e.target.closest(".tab");if(!b)return;rank=+b.dataset.r;openProd=null;draw()};
+$("stabs").onclick=e=>{const b=e.target.closest(".tab");if(!b)return;store=b.dataset.s;openProd=null;draw()};
+$("onlyNo").onchange=draw;
+$("prodTbl").onclick=e=>{const tr=e.target.closest("tr.prod");if(!tr)return;openProd=openProd===tr.dataset.id?null:tr.dataset.id;draw()};
+$("pplTbl").onclick=async e=>{
+  const a=e.target.closest("[data-adj]"); if(a){adjust(a.dataset.adj);return}
+  const b=e.target.closest("[data-unlock]");if(!b)return;const n=b.dataset.unlock;
+  const st=(D.people.find(x=>x.name===n)||{}).status;
+  if(!await ask({title:st==="申請済"?`${n} さんが申請し直せるようにしますか？`:`${n} さんの再開パスワードを発行し直しますか？`,
+    msg:st==="申請済"?"申請した内容を下書きに戻して、新しい再開パスワードを発行します。本人が名前を選んでパスワードを入れると、前の内容から直して申請し直せます。（申請し直すまでは、前の申請内容のまま集計に入っています）":"パスワードを忘れた人用です。入力中の内容はそのまま残ります。",ok:st==="申請済"?"再申請させる":"発行する"}))return;
+  api("xmasUnlock",PW,n).then(r=>{load(D.year);ask({title:`${n} さんの新しい再開パスワード`,big:r.code,msg:"本人に伝えてください。名前を選んでこのパスワードを入れると、続きから入れます。",ok:"閉じる",cancel:false})}).catch(e=>toast(errMsg(e)))};
+/* 予算の個別調整：役職の基本額にプラス・マイナスする */
+async function adjust(n){
+  const p=D.people.find(x=>x.name===n); if(!p) return;
+  const r=await ask({title:`${n} さんの予算を調整`,msg:`${p.role}　基本の予算 ${yen(p.base)}円\n上乗せする金額を入れてください。減らすときは -1000、取り消すときは 0。`,
+    fields:[{id:"yen",label:"上乗せする金額（円）",value:String(p.adj||0),type:"number"},{id:"memo",label:"メモ（任意。例：がんばり賞）",value:p.adjMemo||""}],ok:"保存"});
+  if(!r) return;
+  const yenV=Number(String(r.yen).normalize("NFKC").replace(/[,円\s]/g,""));
+  if(!Number.isFinite(yenV)){toast("数字で入れてください");return}
+  const memo=yenV?r.memo:"";
+  api("xmasSetAdjust",PW,n,yenV,memo||"").then(r=>{toast(`${n} さんの予算を ${yen(r.budget)}円 にしました`);load(D.year)}).catch(e=>toast(errMsg(e)));
+}
+
+/* ---------- 画面の中に出す確認ダイアログ（ブラウザの confirm/prompt の代わり） ----------
+   opt = { title, msg, big, fields:[{id,label,value,type}], ok, cancel, danger }  → OK なら入力値の object、キャンセルなら null */
+function ask(opt){
+  return new Promise(res=>{
+    const bg=document.createElement("div"); bg.className="dlgBg";
+    bg.innerHTML=`<div class="dlg" role="dialog" aria-modal="true"><h3>${esc(opt.title||"確認")}</h3>${opt.msg?`<p>${esc(opt.msg)}</p>`:""}
+      ${opt.big?`<div class="big">${esc(opt.big)}</div>`:""}
+      ${(opt.fields||[]).map(f=>`<label for="dlg_${f.id}">${esc(f.label)}</label><input id="dlg_${f.id}" type="${f.type||"text"}" value="${esc(f.value??"")}" ${f.type==="number"?'inputmode="numeric"':""}>`).join("")}
+      <div class="row">${opt.cancel===false?"":`<button class="btn sub" data-a="no">${esc(opt.cancel||"やめる")}</button>`}<button class="btn ${opt.danger?"":"ok"}" data-a="ok">${esc(opt.ok||"OK")}</button></div></div>`;
+    document.body.appendChild(bg);
+    const first=bg.querySelector("input")||bg.querySelector('[data-a="ok"]'); first.focus(); if(first.select) first.select();
+    const close=v=>{bg.remove();res(v)};
+    bg.onclick=e=>{const a=e.target.dataset.a; if(e.target===bg&&opt.cancel!==false) close(null);
+      if(a==="no") close(null);
+      if(a==="ok"){const out={};(opt.fields||[]).forEach(f=>out[f.id]=bg.querySelector("#dlg_"+f.id).value);close(out)}};
+    bg.onkeydown=e=>{if(e.key==="Enter")bg.querySelector('[data-a="ok"]').click();if(e.key==="Escape"&&opt.cancel!==false)close(null)};
+  });
+}
+
+/* ---------- 選ぶ前に見せるメッセージ ---------- */
+let INTRO_IMG=null; // null＝変えない、""＝外す、データURL＝新しい画像
+function setIntroForm(it){ it=it||{}; INTRO_IMG=null;
+  $("inText").value=it.text||""; $("inEffect").value=it.effect||"mist"; $("inSec").value=String(it.sec||5); showIntroImg(it.image||""); $("inFile").value=""}
+function showIntroImg(u){ $("inImgBox").innerHTML=u?`<img src="${u}" style="max-width:160px;max-height:110px;border-radius:8px;display:block">`:'<span style="font-size:12px;color:var(--sub)">画像なし</span>'; $("inImgBox").dataset.src=u}
+function introNow(){return{text:$("inText").value,effect:$("inEffect").value,sec:Number($("inSec").value),image:$("inImgBox").dataset.src||""}}
+$("inFile").onchange=async()=>{const f=$("inFile").files[0]; if(!f) return;
+  try{ const cv=toCanvas(await loadImg(await readURL(f)),900); let u=cv.toDataURL("image/jpeg",.75); if(u.length>600000) u=cv.toDataURL("image/jpeg",.5);
+    INTRO_IMG=u; showIntroImg(u); toast("画像を読み込みました。「保存」を押すと反映されます") }catch(e){toast(errMsg(e))}};
+$("inImgDel").onclick=()=>{INTRO_IMG=""; showIntroImg(""); $("inFile").value=""};
+$("inPrev").onclick=()=>playIntro(introNow());
+$("inSave").onclick=()=>{const c=introNow(); c.image=INTRO_IMG; $("inSave").disabled=true;
+  api("xmasSetIntro",PW,c).then(it=>{D.intro=it;setIntroForm(it);toast("保存しました。スタッフの画面に反映されます")}).catch(e=>toast(errMsg(e))).finally(()=>$("inSave").disabled=false)};
+
+/* ---------- チラシの読み取り ---------- */
+let RD=[];  // 読み取った商品 {shop,cat,name,price,note,photo,on}
+const CATS=["ケーキ","チキン","オードブル","寿司・刺身","スイーツ","ドリンク","その他"];
+const readURL=f=>new Promise((ok,ng)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>ng(new Error("ファイルを読めませんでした"));r.readAsDataURL(f)});
+const loadImg=src=>new Promise((ok,ng)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ng(new Error("画像を開けませんでした（HEICの場合はJPEGで保存し直してください）"));i.src=src});
+function toCanvas(img,max){const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");
+  c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return c}
+function crop(cv,box){
+  if(!box) return "";
+  let [x1,y1,x2,y2]=box.map(v=>Math.max(0,Math.min(1,Number(v)||0))); if(x2-x1<.03||y2-y1<.03) return "";
+  const W=cv.width,H=cv.height,sw=(x2-x1)*W,sh=(y2-y1)*H,k=Math.min(1,300/Math.max(sw,sh));
+  const c=document.createElement("canvas");c.width=Math.round(sw*k);c.height=Math.round(sh*k);
+  c.getContext("2d").drawImage(cv,x1*W,y1*H,sw,sh,0,0,c.width,c.height);
+  let u=c.toDataURL("image/jpeg",.6); if(u.length>45000) u=c.toDataURL("image/jpeg",.4); return u.length>45000?"":u;
+}
+$("rdBtn").onclick=async()=>{
+  const files=[...$("rdFile").files]; if(!files.length){toast("チラシの写真かPDFを選んでください");return}
+  const auto=$("rdAuto").checked;
+  if(auto&&!D.isCurrent){toast("今年度を表示しているときだけ登録できます");return}
+  const btn=$("rdBtn"); btn.disabled=true; let added=0, skipped=0;
+  try{
+    for(let i=0;i<files.length;i++){
+      const f=files[i]; btn.textContent=`読み取り中…（${i+1}/${files.length}）`;
+      let mime="image/jpeg",data,cv=null;
+      if(f.type==="application/pdf"){ if(f.size>20*1024*1024) throw new Error(f.name+"：PDFが大きすぎます（20MBまで）");
+        mime="application/pdf"; data=(await readURL(f)).split(",")[1]; }
+      else { cv=toCanvas(await loadImg(await readURL(f)),1600); data=cv.toDataURL("image/jpeg",.85).split(",")[1]; }
+      const r=await api("xmasReadFlyer",PW,{mime,data});
+      const shop=$("rdShop").value.trim()||r.shop||"（お店の名前）";
+      const items=r.items.map(it=>({shop,cat:CATS.includes(it.cat)?it.cat:"その他",name:it.name,price:it.price,note:it.note||"",photo:cv?crop(cv,it.box):"",on:true}));
+      if(auto){ btn.textContent=`登録中…（${i+1}/${files.length}）`; const a=await api("xmasAddPrizes",PW,items); added+=a.added; skipped+=a.skipped.length; }
+      else { RD.push(...items); drawRD(); }
+    }
+    if(auto){ toast(`${added}件を登録しました`+(skipped?`（すでにある ${skipped}件は登録しませんでした）`:"")+"。いらない商品は下の一覧から削除できます"); await load(D.year); }
+    else toast("読み取りました。内容を確認して「追加する」を押してください");
+  }catch(e){toast(errMsg(e))}
+  btn.disabled=false; btn.textContent="読み取って登録"; $("rdFile").value="";
+};
+function drawRD(){
+  if(!RD.length){$("rdOut").innerHTML="";return}
+  $("rdOut").innerHTML=`<div class="rdHead">読み取った商品（${RD.length}件）　金額やお店の名前が違うときは直してください</div>
+    <div class="scroll" style="padding:0 8px"><table class="rd"><thead><tr><th>追加</th><th>写真</th><th>お店</th><th>分類</th><th>商品名</th><th>金額（円）</th><th>ひとこと</th></tr></thead><tbody>
+    ${RD.map((r,i)=>`<tr><td><input type="checkbox" data-i="${i}" data-f="on" ${r.on?"checked":""}></td>
+      <td>${r.photo?`<img src="${r.photo}" alt="">`:`<div class="nop">写真なし</div>`}</td>
+      <td style="min-width:120px"><input type="text" data-i="${i}" data-f="shop" value="${esc(r.shop)}"></td>
+      <td style="min-width:100px"><select data-i="${i}" data-f="cat">${CATS.map(c=>`<option ${c===r.cat?"selected":""}>${c}</option>`).join("")}</select></td>
+      <td style="min-width:200px"><input type="text" data-i="${i}" data-f="name" value="${esc(r.name)}"></td>
+      <td style="min-width:90px"><input type="number" data-i="${i}" data-f="price" value="${r.price}"></td>
+      <td style="min-width:160px"><input type="text" data-i="${i}" data-f="note" value="${esc(r.note)}"></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="rdBar"><button class="btn ok" id="rdAdd">チェックした商品を景品リストに追加</button><button class="btn sub" id="rdClear">やめる</button>
+      <small style="color:var(--sub)">同じお店・同じ商品名がすでにあるものは追加されません</small></div>`;
+  $("rdAdd").onclick=()=>{const items=RD.filter(r=>r.on); if(!items.length){toast("チェックが1つもありません");return}
+    if(!D.isCurrent){toast("今年度を表示しているときだけ追加できます");return}
+    $("rdAdd").disabled=true;
+    api("xmasAddPrizes",PW,items).then(r=>{toast(`${r.added}件を追加しました`+(r.skipped.length?`（すでにある ${r.skipped.length}件は追加しませんでした）`:""));RD=[];drawRD();load(D.year)})
+      .catch(e=>{toast(errMsg(e));$("rdAdd").disabled=false})};
+  $("rdClear").onclick=()=>{RD=[];drawRD()};
+}
+$("rdOut").addEventListener("input",e=>{const t=e.target,i=t.dataset.i,f=t.dataset.f;if(i===undefined)return;
+  RD[i][f]=f==="on"?t.checked:f==="price"?Math.round(Number(t.value)||0):t.value});
+$("rdOut").addEventListener("change",e=>{const t=e.target;if(t.dataset.f==="on"||t.tagName==="SELECT"){RD[t.dataset.i][t.dataset.f]=t.dataset.f==="on"?t.checked:t.value}});
+
+$("dlBtn").onclick=()=>api("xmasSetDeadline",PW,$("dl").value).then(o=>{toast(o.deadline?`締切を ${o.label} にしました`:"締切なしにしました");D.open=o}).catch(e=>toast(errMsg(e)));
+$("expBtn").onclick=()=>api("xmasExport",PW,D.year).then(r=>toast(`「${r.sheet}」シートに書き出しました`)).catch(e=>toast(errMsg(e)));
+$("newYearBtn").onclick=async()=>{const r=await ask({title:"新しい年度を始める",msg:"景品リストは今年の分がコピーされます。",fields:[{id:"y",label:"新しい年度（西暦4桁）",value:String(Number(D.year)+1),type:"number"}],ok:"始める"});
+  if(!r||!r.y)return; const y=r.y; api("xmasNewYear",PW,y).then(r=>{toast(`${r.year}年度を始めました。X'mas景品シートで金額・写真を直してください`);load(r.year)}).catch(e=>toast(errMsg(e)))};
+
+
+/* ===== 最初のメッセージを流す（xmas.html と xmas_admin.html で同じ） =====
+   intro = { text, image(データURL), effect: none|fade|mist, sec }。タップで飛ばせる。終わったら done() */
+function playIntro(intro,done){
+  const box=document.getElementById("intro"), ms=Math.max(2,Math.min(6,Number(intro&&intro.sec)||5))*1000;
+  const text=String(intro&&intro.text||"").trim(), img=intro&&intro.image||"";
+  if(!text&&!img){done&&done();return}
+  const lines=text?text.split(/\n/).filter(l=>l.trim()):[];
+  const e=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  let h=img?`<div class="img" style="background-image:url('${img}')"></div><div class="mist"></div>`:"";
+  for(let i=0;i<14;i++) h+=`<i class="sn" style="left:${Math.random()*100}%;font-size:${6+Math.random()*10}px;animation-duration:${4+Math.random()*5}s;animation-delay:${-Math.random()*6}s">❄</i>`;
+  for(let i=0;i<8;i++) h+=`<i class="tw" style="left:${8+Math.random()*84}%;top:${10+Math.random()*80}%;font-size:${12+Math.random()*14}px;animation-delay:${Math.random()*1.6}s">✨</i>`;
+  const step=Math.min(.45,(ms/1000*.55)/Math.max(1,lines.length));
+  h+=`<div class="txt">${lines.map((l,i)=>`<span class="${i===lines.length-1&&lines.length>1?"big":""}" style="animation-delay:${(.25+i*step).toFixed(2)}s">${e(l)}</span>`).join("")}</div>`;
+  h+=`<div class="skip">タップで次へ</div>`;
+  box.innerHTML=h; box.classList.remove("out"); box.classList.add("show");
+  const im=box.querySelector(".img"), mist=box.querySelector(".mist"), base=text?.6:1;
+  if(im&&im.animate){
+    const o={duration:ms,fill:"forwards",easing:"ease-in"};
+    if(intro.effect==="fade") im.animate([{opacity:base},{opacity:base,offset:.3},{opacity:0}],o);
+    else if(intro.effect==="mist"){ im.animate([{opacity:base,filter:"blur(0px)"},{opacity:base*.25,filter:"blur(14px)"}],o); mist.animate([{opacity:0},{opacity:.75}],o); }
+    else im.style.opacity=base;
+  }
+  let ended=false;
+  const end=()=>{if(ended)return;ended=true;clearTimeout(t);box.classList.add("out");
+    setTimeout(()=>{box.classList.remove("show","out");box.innerHTML="";done&&done()},800)};
+  const t=setTimeout(end,ms); box.onclick=end;
+}
+
+
+/* 管理者の入口：一般の入口ページから管理画面へ分岐する（管理画面のURLを別に配らない） */
+(function(){const as=[document.getElementById("adminLink"),document.getElementById("adminLink2")].filter(Boolean); const a={set href(v){as.forEach(x=>x.href=v)}};
+  if(window.GENESIS_API) a.href="index.html"; // Googleの外に置いた画面：同じ場所のファイル
+  else if(typeof google!=="undefined"&&google.script&&google.script.run) google.script.run.withSuccessHandler(u=>{a.href=u+"?page=xmas"}).appUrl();
+  else a.href="xmas.html";})();
+
+/* ==================== デモ（GASでは使われません） ==================== */
+const DEMO=(()=>{
+  if(LIVE) return null;
+  const P=[["P37", "パーティーメニュー", "寿司・刺身", "刺身盛り合わせ 6種8品盛", 4980, "めばちまぐろ・サーモン・たい・ほたて・中とろ・ずわいがに"], ["P38", "パーティーメニュー", "寿司・刺身", "生寿司種 8品盛（4人前）", 3980, "中とろ・ほたて・ずわいがに・サーモン・たい・ぶり・めばちまぐろ・甘えび"], ["P39", "パーティーメニュー", "寿司・刺身", "手巻寿司種 8品盛（4人前）", 3980, "中とろ・ほたて・ずわいがに・サーモン・たい・ぶり・めばちまぐろ・甘えび"], ["P40", "パーティーメニュー", "寿司・刺身", "パーティー生寿司（A）24貫", 3500, "まぐろ・ほたて・サーモン・穴子・いくら・うに など（サビ抜き）"], ["P42", "パーティーメニュー", "寿司・刺身", "パーティー生寿司（B）27貫", 2880, "まぐろ・えび・サーモン・ずわいがに・いくら・ねぎとろ など（サビ抜き）"], ["P41", "パーティーメニュー", "寿司・刺身", "サーモンざんまい（ハラス入り）12貫", 2380, "サビ抜き"], ["P43", "パーティーメニュー", "オードブル", "オードブル（A）約3〜4人前", 4280, "直径37cm"], ["P44", "パーティーメニュー", "オードブル", "オードブル（B）約3人前", 2980, "直径35cm"], ["P46", "パーティーメニュー", "オードブル", "バラエティセット 約2〜3人前", 1780, ""], ["P45", "パーティーメニュー", "オードブル", "中華オードブル 約2人前", 1680, ""], ["P47", "パーティーメニュー", "チキン", "国産若鶏ローストチキン丸", 2080, ""], ["P48", "パーティーメニュー", "チキン", "中札内田舎どり 中びなセット（焼＆唐揚げ）", 2180, ""], ["T1", "鳥せい", "チキン", "若どり 炭火焼き", 1250, "1,250円〜（大きさで金額が変わることがあります）"], ["T2", "鳥せい", "チキン", "若どり から揚げ", 1250, "1,250円〜（大きさで金額が変わることがあります）"], ["T3", "鳥せい", "チキン", "カラットチキン（骨なし）", 990, ""], ["K1", "ケンタッキー", "チキン", "パーティバーレル バラエティ", 5490, "12/13までの早割価格（通常5,990円）。オリジナルチキン4・チキンテンダー2・ビスケット2・チョコムースケーキ・グラタン"], ["K2", "ケンタッキー", "チキン", "パーティバーレル オリジナル", 5490, "12/13までの早割価格（通常5,990円）。オリジナルチキン8・チョコムースケーキ・グラタン"], ["K5", "ケンタッキー", "チキン", "クリスマスパック A", 5790, "バーベキューチキン2・オリジナルチキン4・チキンテンダー4・ナゲット10"], ["K6", "ケンタッキー", "チキン", "クリスマスパック B", 4290, "バーベキューチキン2・チキンテンダー4・ナゲット10"], ["K4", "ケンタッキー", "チキン", "クリスマスパック S", 3550, "オリジナルチキン4・チキンテンダー4・ナゲット10"], ["K3", "ケンタッキー", "チキン", "クリスマスパック ペア", 3090, "バーベキューチキン・オリジナルチキン2・チキンテンダー2・ナゲット5"], ["K7", "ケンタッキー", "チキン", "バーベキューチキン コンボ", 2890, "バーベキューチキン・チキンテンダー2・ナゲット5・ポテトL"], ["F1-4", "十勝トテッポ工房", "ケーキ", "生デコレーションケーキ 4号（12cm）", 4400, "北海道産生クリームと苺の定番ケーキ"], ["F1-5", "十勝トテッポ工房", "ケーキ", "生デコレーションケーキ 5号（15cm）", 5600, "北海道産生クリームと苺の定番ケーキ"], ["F1-6", "十勝トテッポ工房", "ケーキ", "生デコレーションケーキ 6号（18cm）", 7000, "北海道産生クリームと苺の定番ケーキ"], ["F2", "十勝トテッポ工房", "ケーキ", "ハーフ＆ハーフ 5号（15cm）", 5200, "リュンヌドフロマージュとベリータルト"], ["F3", "十勝トテッポ工房", "ケーキ", "シマエナガサンタ 6号（立体）", 8800, "限定50台"], ["F4", "十勝トテッポ工房", "ケーキ", "ナポレオンパイ（18cm×9cm）", 6500, "限定30台"], ["F5", "十勝トテッポ工房", "ケーキ", "ブッシュドノエル（16cm）", 4800, ""], ["F6", "十勝トテッポ工房", "ケーキ", "ベリーベリータルト 5号（15cm）", 5400, ""], ["F7-4", "十勝トテッポ工房", "ケーキ", "シマエナガ生デコレーション 4号", 3870, "お誕生日プレート付き（12/23〜25限定）"], ["F7-5", "十勝トテッポ工房", "ケーキ", "シマエナガ生デコレーション 5号", 4760, "お誕生日プレート付き（12/23〜25限定）"], ["F7-6", "十勝トテッポ工房", "ケーキ", "シマエナガ生デコレーション 6号", 6050, "お誕生日プレート付き（12/23〜25限定）"], ["R2-4", "ろまん亭", "ケーキ", "チョコモンドーム 4号", 2700, "ろまん亭の人気No.1"], ["R2-5", "ろまん亭", "ケーキ", "チョコモンドーム 5号", 3900, "ろまん亭の人気No.1"], ["R2-6", "ろまん亭", "ケーキ", "チョコモンドーム 6号", 4900, "ろまん亭の人気No.1"], ["R1", "ろまん亭", "ケーキ", "ショコラ 4.5号", 3600, ""], ["R6", "ろまん亭", "ケーキ", "フレジェ（16cm×12cm）", 4800, "50台限定"], ["R7", "ろまん亭", "ケーキ", "いちごバスクチーズ 4.5号", 2800, ""], ["R8", "ろまん亭", "ケーキ", "キャラメルバスクチーズ 4.5号", 2800, ""], ["R9", "ろまん亭", "ケーキ", "いちごデコレーション 4.5号", 3600, "予約限定"], ["R10", "ろまん亭", "ケーキ", "木苺レアチーズ 4.5号", 3600, "予約限定"], ["R11", "ろまん亭", "ケーキ", "ガトーショコラ 4.5号", 3600, "予約限定"], ["R3", "ろまん亭", "スイーツ", "クリスマスいちごショート（1個）", 550, ""], ["R4", "ろまん亭", "スイーツ", "クリスマスプリン（1個）", 650, ""], ["R5", "ろまん亭", "スイーツ", "チョコモンブラン（1個）", 380, ""]].map(r=>({id:r[0],shop:r[1],cat:r[2],name:r[3],price:r[4],note:r[5],photo:"",hidden:false}));
+  let seed=7; const rnd=()=>(seed=(seed*9301+49297)%233280)/233280;
+  const pick=b=>{const out={};let left=b;for(let t=0;t<12;t++){const p=P[Math.floor(rnd()*P.length)];if(p.price<=left){out[p.id]=(out[p.id]||0)+1;left-=p.price}}
+    return Object.keys(out).map(id=>{const p=P.find(x=>x.id===id);return{id,name:p.name,price:p.price,qty:out[id]}})};
+  const roles=["店長","主任","社員","社員","キャスト","キャスト","キャスト","キャスト","キャスト","キャスト","キャスト","キャスト"];
+  const people=[];
+  [["オペラ",12],["ゴッサム",12],["エルシティ",12],["総務・サービス部",6]].forEach(([s,n])=>{for(let i=0;i<n;i++){
+    const role=roles[i]||"キャスト",budget=role==="店長"?9000:/主任|社員/.test(role)?6000:3000,r=rnd();
+    const status=r<.7?"申請済":r<.85?"入力中":"未申請";
+    people.push({store:s,name:`${s.slice(0,2)}スタッフ${String(i+1).padStart(2,"0")}`,role,base:budget,adj:0,adjMemo:"",budget,status,at:"",picks:status==="申請済"?{1:pick(budget),2:pick(budget)}:null})}});
+  let deadline="";
+  const intro={text:"現場でお客様に\n笑顔で接する皆さんに\n島崎サンタさんからの\n素敵なクリスマスプレゼント🎁",effect:"mist",sec:5,image:""};
+  return {
+    xmasAdminLogin:()=>({ok:true}),
+    xmasSetIntro:(pw,c)=>{if(c.image!==null)intro.image=c.image;Object.assign(intro,{text:c.text,effect:c.effect,sec:c.sec});return Object.assign({},intro)},
+    xmasAdmin:(pw,y)=>({intro:Object.assign({},intro),year:y||"2026",years:["2025","2026"],isCurrent:(y||"2026")==="2026",open:{closed:false,deadline,label:deadline?deadline+" 23:59":""},
+      people:(y==="2025")?[]:people,prizes:P}),
+    xmasUnlock:()=>({code:String(1000+Math.floor(Math.random()*9000))}),
+    xmasSetDeadline:(pw,s)=>{deadline=s;return{closed:false,deadline:s,label:s?s+" 23:59":""}},
+    xmasExport:()=>({sheet:"X'mas集計_2026"}),
+    xmasNewYear:(pw,y)=>({year:y}),
+    xmasSetAdjust:(pw,n,v,memo)=>{const p=people.find(x=>x.name===n);p.adj=v;p.adjMemo=memo;p.budget=p.base+v;return{budget:p.budget}},
+    xmasReadFlyer:()=>({shop:"（デモ）ろまん亭",items:[
+      {cat:"ケーキ",name:"ショコラ 4.5号",price:3600,note:"",box:[.02,.18,.36,.45]},
+      {cat:"ケーキ",name:"チョコモンドーム 5号",price:3900,note:"人気No.1",box:[.35,.18,.66,.5]},
+      {cat:"スイーツ",name:"クリスマスプリン（1個）",price:650,note:"",box:[.85,.27,.97,.37]}]}),
+    xmasAddPrizes:(pw,items)=>{items.forEach(it=>P.push({id:"N"+(P.length+1),shop:it.shop,cat:it.cat,name:it.name,price:it.price,photo:it.photo,note:it.note}));return{added:items.length,skipped:[]}},
+    xmasPrizeOp:(pw,op,ids)=>{let n=0;for(let i=P.length-1;i>=0;i--){if(!ids.includes(P[i].id))continue;n++;if(op==="delete")P.splice(i,1);else P[i].hidden=op==="hide"}return{n}},
+  };
+})();
+</script>
+</body>
+</html>

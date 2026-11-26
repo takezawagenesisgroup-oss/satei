@@ -5,7 +5,10 @@
 
 - 入力フォーム（従業員用）：`index.html`
 - 管理画面：`admin.html`
+- クリスマスプレゼント申請：`xmas/index.html`（管理画面は `xmas/admin.html`）
 
 このフォルダのファイルは自動で作っています。直接直さないでください。
 元のプログラムは非公開のリポジトリ `bonus-evaluation` にあり、
 `node tools/build-static.js <本番の /exec のURL> <このフォルダ>` で作り直します。
+
+クリスマスの画面（`xmas/`）は `python3 tools/build-static.py <本番の /exec のURL> <このフォルダ>/xmas` で作り直します。
